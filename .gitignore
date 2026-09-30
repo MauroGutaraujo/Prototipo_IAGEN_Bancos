@@ -1,0 +1,13 @@
+.env
+bin/
+obj/
+*.user
+.vs/
+.vscode/
+.idea/
+__pycache__/
+.venv/
+tools/dataset-generator/data/
+tools/analysis/out/
+knowledge/raw/*.pdf
+*.log

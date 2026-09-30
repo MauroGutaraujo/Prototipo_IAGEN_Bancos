@@ -1,0 +1,5 @@
+numpy
+pillow
+pandas
+pyodbc
+# Tras instalar, fijar versiones con: pip freeze > requirements.lock.txt

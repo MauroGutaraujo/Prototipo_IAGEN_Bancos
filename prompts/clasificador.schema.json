@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SalidaClasificador",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["intencion", "monto", "moneda", "fecha", "codigo"],
+  "properties": {
+    "intencion": { "type": "string", "enum": ["C1", "C2", "C3", "FUERA_DE_CATALOGO"] },
+    "monto": { "type": ["number", "null"], "minimum": 0 },
+    "moneda": { "type": ["string", "null"], "enum": ["PEN", "USD", null] },
+    "fecha": { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "codigo": { "type": ["string", "null"], "maxLength": 40 }
+  }
+}

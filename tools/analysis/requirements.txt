@@ -1,0 +1,8 @@
+pandas
+numpy
+scipy
+statsmodels
+pingouin
+sqlalchemy
+pyodbc
+# Tras instalar, fijar versiones con: pip freeze > requirements.lock.txt

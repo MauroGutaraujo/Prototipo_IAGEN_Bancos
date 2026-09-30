@@ -1,0 +1,14 @@
+{
+  "_nota": "Verificar el nombre exacto de cada modelo y el endpoint compatible con OpenAI en la documentación vigente de cada proveedor ANTES de la ventana de ejecución. Las claves van en variables de entorno.",
+  "modelos": [
+    { "id": "gpt-4o",            "proveedor": "OpenAI",    "segmento": "gran", "endpoint": "https://api.openai.com/v1",                                  "apiKeyEnv": "OPENAI_API_KEY",    "modelName": "gpt-4o" },
+    { "id": "claude-sonnet-4.5", "proveedor": "Anthropic", "segmento": "gran", "endpoint": "https://api.anthropic.com/v1/",                              "apiKeyEnv": "ANTHROPIC_API_KEY", "modelName": "VERIFICAR" },
+    { "id": "gemini-3.1-pro",    "proveedor": "Google",    "segmento": "gran", "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/",   "apiKeyEnv": "GEMINI_API_KEY",    "modelName": "VERIFICAR" },
+    { "id": "mistral-large-3",   "proveedor": "Mistral",   "segmento": "gran", "endpoint": "https://api.mistral.ai/v1",                                  "apiKeyEnv": "MISTRAL_API_KEY",   "modelName": "VERIFICAR" },
+    { "id": "llama-4-maverick",  "proveedor": "Meta (vía proveedor de inferencia)", "segmento": "gran", "endpoint": "VERIFICAR", "apiKeyEnv": "LLAMA_API_KEY", "modelName": "VERIFICAR" },
+    { "id": "gpt-4o-mini",       "proveedor": "OpenAI",    "segmento": "ligero", "endpoint": "https://api.openai.com/v1",                                "apiKeyEnv": "OPENAI_API_KEY",    "modelName": "gpt-4o-mini" },
+    { "id": "claude-haiku-4.5",  "proveedor": "Anthropic", "segmento": "ligero", "endpoint": "https://api.anthropic.com/v1/",                            "apiKeyEnv": "ANTHROPIC_API_KEY", "modelName": "VERIFICAR" },
+    { "id": "gemini-3-flash",    "proveedor": "Google",    "segmento": "ligero", "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/", "apiKeyEnv": "GEMINI_API_KEY",    "modelName": "VERIFICAR" }
+  ],
+  "parametros": { "temperature": 0, "maxTokensClasificacion": 200, "maxTokensGeneracion": 600 }
+}
