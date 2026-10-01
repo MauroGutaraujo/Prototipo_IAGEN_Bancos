@@ -101,7 +101,8 @@ public sealed class GuardrailSalida
         // 4. Contenidos mínimos (el número se busca fuera de montos, fechas, códigos, horas y citas)
         if (!Regex.IsMatch(resto, $@"(?<!\d)0*{h.NumeroReclamo}(?!\d)", RegexOptions.CultureInvariant))
             fallas.Add(new(TipoFalla.FaltaNumeroReclamo, h.NumeroReclamo.ToString(CultureInfo.InvariantCulture)));
-        var normalizado = Normalizacion.Texto(entrada.Borrador);
+        // Sin citas: un id como [F:sbs-art-10] no cuenta como mención de la SBS.
+        var normalizado = Normalizacion.Texto(Cita.Replace(entrada.Borrador, " "));
         if (!Instancia.IsMatch(normalizado))
             fallas.Add(new(TipoFalla.FaltaInstancia, "Defensoría del Cliente Financiero | SBS | Indecopi"));
         if (!normalizado.Contains(_plazo, StringComparison.Ordinal))

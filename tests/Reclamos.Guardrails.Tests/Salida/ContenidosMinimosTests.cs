@@ -29,6 +29,16 @@ public class ContenidosMinimosTests
         Assert.Equal([TipoFalla.FaltaInstancia], Tipos(Verificar(sinInstancias)));
     }
 
+    [Fact]
+    public void Id_de_cita_no_cuenta_como_instancia()
+    {
+        var soloCita = Valido.Replace(
+            "Si no se encuentra conforme, puede acudir a la Defensoría del Cliente Financiero, a la SBS o a Indecopi.",
+            "Ver [F:indecopi-1].");
+        var v = Verificar(soloCita, admitidos: [.. Admitidos, "indecopi-1"]);
+        Assert.Equal([TipoFalla.FaltaInstancia], Tipos(v));
+    }
+
     [Theory]
     [InlineData("la Defensoria del Cliente Financiero")]
     [InlineData("la SBS")]
