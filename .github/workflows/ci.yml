@@ -116,8 +116,12 @@ jobs:
       - name: Publicar reportes como anotaciones
         if: always()
         run: |
-          python3 .github/scripts/csv_anotacion.py TestResults/ocr/ocr_integracion.csv "OCR integración (seed 2026, 10 vouchers)"
-          python3 .github/scripts/csv_anotacion.py TestResults/ocr/ocr_ajuste_dev.csv "Ajuste OCR (banco de desarrollo seed 7)"
+          if [ -f TestResults/ocr/ocr_integracion.csv ]; then
+            python3 .github/scripts/csv_anotacion.py TestResults/ocr/ocr_integracion.csv "OCR integración - seed 2026 - 10 vouchers"
+          fi
+          if [ -f TestResults/ocr/ocr_ajuste_dev.csv ]; then
+            python3 .github/scripts/csv_anotacion.py TestResults/ocr/ocr_ajuste_dev.csv "Ajuste OCR - banco de desarrollo seed 7"
+          fi
           python3 .github/scripts/trx_anotaciones.py TestResults
 
       - uses: actions/upload-artifact@v7
