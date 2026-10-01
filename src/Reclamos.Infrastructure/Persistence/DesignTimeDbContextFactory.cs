@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore.Design;
 namespace Reclamos.Infrastructure.Persistence;
 
 /// <summary>
-/// Usado solo por <c>dotnet ef</c>. Toma la cadena de <c>SQL_CONN</c>; si no existe, usa una
-/// cadena local sin credenciales (generar una migración no abre conexión).
+/// Usado solo por <c>dotnet ef</c>. Toma la cadena de la variable <c>SQL_CONN</c> o, si no
+/// existe, de la línea <c>SQL_CONN=</c> del <c>.env</c> más cercano. Sin cadena, falla.
 /// </summary>
 public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<ReclamosDbContext>
 {
@@ -35,7 +35,11 @@ public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<Rec
             }
         }
 
-        conn ??= "Server=localhost,1433;Database=ReclamosTesis;User Id=sa;Password=CambiaEstaClave_2026!;TrustServerCertificate=True";
+        if (string.IsNullOrWhiteSpace(conn))
+        {
+            throw new InvalidOperationException(
+                "Falta la cadena de conexión: define la variable de entorno SQL_CONN o agrégala al archivo .env.");
+        }
 
         var options = new DbContextOptionsBuilder<ReclamosDbContext>()
             .UseSqlServer(conn)
