@@ -28,7 +28,7 @@ jobs:
           dotnet test --solution Reclamos.sln --no-build --report-trx
           --results-directory "${{ github.workspace }}/TestResults"
           --filter-not-trait "Categoria=Integracion" --filter-not-trait "Categoria=AjusteOcr"
-          --filter-not-trait "Categoria=IntegracionRag"
+          --filter-not-trait "Categoria=IntegracionRag" --filter-not-trait "Categoria=CalibracionRag"
 
       - name: Publicar pruebas fallidas como anotaciones
         if: failure()
@@ -164,9 +164,21 @@ jobs:
           dotnet test --project tests/Reclamos.Infrastructure.Tests --no-build --report-trx
           --results-directory "${{ github.workspace }}/TestResults" --filter-trait "Categoria=IntegracionRag"
 
+      # Revisión de θ con consultas de desarrollo: solo con la etiqueta [calibrar-theta].
+      - name: Calibración de θ (consultas de desarrollo, reporta sin decidir)
+        if: contains(github.event.head_commit.message, '[calibrar-theta]')
+        run: >
+          dotnet test --project tests/Reclamos.Infrastructure.Tests --no-build --report-trx
+          --results-directory "${{ github.workspace }}/TestResults" --filter-trait "Categoria=CalibracionRag"
+
       - name: Publicar reportes como anotaciones
         if: always()
         run: |
+          for f in calibracion_theta calibracion_theta_top5; do
+            if [ -f TestResults/rag/$f.csv ]; then
+              python3 .github/scripts/csv_anotacion.py TestResults/rag/$f.csv "RAG $f"
+            fi
+          done
           if [ -f TestResults/rag/rag_integracion.csv ]; then
             python3 .github/scripts/csv_anotacion.py TestResults/rag/rag_integracion.csv "RAG integración - 3 consultas"
           fi

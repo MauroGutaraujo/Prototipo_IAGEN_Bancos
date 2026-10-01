@@ -1,0 +1,13 @@
+{"id": "D01", "consulta": "¿En qué plazo debe una entidad financiera responder el reclamo de un usuario?", "pertinentes": ["sbs-04036-2022-art-7", "ley-29571-art-24", "ley-29571-art-88", "ley-31435-art-unico", "pir-2026-v1-art-2"], "tema": "plazo de atención"}
+{"id": "D02", "consulta": "¿Qué información mínima debe contener la comunicación de respuesta a un reclamo?", "pertinentes": ["sbs-04036-2022-art-9"], "tema": "contenido de la respuesta (9.6)"}
+{"id": "D03", "consulta": "¿A qué instancias puede acudir el cliente si no está conforme con la respuesta del banco a su reclamo?", "pertinentes": ["sbs-04036-2022-art-9", "ley-29571-art-88", "pir-2026-v1-art-3"], "tema": "instancias"}
+{"id": "D04", "consulta": "Me cobraron dos veces la misma compra con mi tarjeta, ¿cuándo corresponde el extorno del cargo repetido?", "pertinentes": ["pir-2026-v1-art-4"], "tema": "tipología C1"}
+{"id": "D05", "consulta": "¿Cuándo se declara improcedente un reclamo por una operación no reconocida que se autenticó con dos factores desde el celular registrado del cliente?", "pertinentes": ["pir-2026-v1-art-5"], "tema": "tipología C2"}
+{"id": "D06", "consulta": "La pasarela de pago falló y no se completó la compra, pero el dinero sí se debitó de mi cuenta, ¿me lo deben devolver?", "pertinentes": ["pir-2026-v1-art-6"], "tema": "tipología C3"}
+{"id": "D07", "consulta": "¿Qué se entiende por reclamo en el sistema financiero y en qué se diferencia de un requerimiento?", "pertinentes": ["sbs-04036-2022-art-4", "sbs-04036-2022-art-6"], "tema": "definiciones"}
+{"id": "D08", "consulta": "¿Por qué canales puede un usuario presentar un reclamo ante su banco?", "pertinentes": ["sbs-04036-2022-art-8"], "tema": "canales"}
+{"id": "D09", "consulta": "¿Qué reclamos por montos elevados no pueden resolverse de manera automática?", "pertinentes": ["pir-2026-v1-art-7"], "tema": "umbral de riesgo"}
+{"id": "D10", "consulta": "¿Cuál es la responsabilidad del proveedor por la idoneidad y calidad del servicio que presta?", "pertinentes": ["ley-29571-art-18", "ley-29571-art-19"], "tema": "idoneidad"}
+{"id": "D11", "consulta": "¿Qué debe informar un banco sobre la tasa de costo efectivo anual en la publicidad de sus créditos?", "pertinentes": ["ley-29571-art-82", "ley-29571-art-83", "ley-29571-art-94", "ley-29571-art-96"], "tema": "control: tema financiero ajeno a reclamos"}
+{"id": "D12", "consulta": "¿Cuáles son los requisitos para obtener una licencia de conducir en Lima?", "pertinentes": [], "tema": "control negativo: ningún fragmento es pertinente"}
+{"id": "D13", "consulta": "¿Cómo se calcula el impuesto a la renta de cuarta categoría?", "pertinentes": [], "tema": "control negativo: ningún fragmento es pertinente"}
