@@ -19,7 +19,11 @@ jobs:
         run: dotnet build Reclamos.sln
 
       - name: Tests
-        run: dotnet test --solution Reclamos.sln --no-build
+        run: dotnet test --solution Reclamos.sln --no-build --report-trx --results-directory "${{ github.workspace }}/TestResults"
+
+      - name: Publicar pruebas fallidas como anotaciones
+        if: failure()
+        run: python3 .github/scripts/trx_anotaciones.py TestResults
 
       - name: Cobertura de Reclamos.Guardrails
         run: >
