@@ -1,0 +1,51 @@
+RESOLUCIÓN SBS N.° 04036-2022
+REGLAMENTO DE GESTIÓN DE RECLAMOS Y REQUERIMIENTOS DEL SISTEMA FINANCIERO
+
+CAPÍTULO I: DISPOSICIONES GENERALES
+
+Artículo 1. Objeto y ámbito de aplicación
+El presente Reglamento tiene por objeto establecer las disposiciones mínimas que las empresas del sistema financiero deben cumplir en la gestión y resolución de los reclamos y requerimientos presentados por sus usuarios, asegurando una atención oportuna, diligente, transparente y fundamentada.
+
+Artículo 3. Definiciones
+Para los efectos del presente Reglamento se entenderá por:
+a) Reclamo: La manifestación verbal, escrita o en soporte digital de disconformidad o insatisfacción del usuario respecto de los productos o servicios financieros brindados, o por la disconformidad con cobros, cargos no reconocidos, comisiones, operaciones duplicadas, transacciones fallidas o el incumplimiento contractual por parte de la empresa.
+b) Requerimiento: La solicitud formulada por el usuario para obtener información, documentación, copia de contratos o constancias vinculadas a sus operaciones.
+
+CAPÍTULO II: CANALES Y REGISTRO DE RECLAMOS
+
+Artículo 7. Canales de recepción de reclamos
+Las empresas del sistema financiero están obligadas a poner a disposición de los usuarios canales accesibles, presenciales y no presenciales (banca móvil, banca por internet, vía telefónica y canales virtuales) para la interposición de reclamos, garantizando su disponibilidad y registro ininterrumpido.
+
+Artículo 10. Código de identificación del reclamo
+Al momento de interponer un reclamo por cualquier canal, la empresa debe asignar y comunicar inmediatamente al usuario un número o código correlativo único que identifique el expediente de reclamo, con el cual el usuario podrá realizar el seguimiento de su solicitud.
+
+CAPÍTULO III: PLAZOS Y GESTIÓN DE RECLAMOS
+
+Artículo 14. Tratamiento de cargos no reconocidos y operaciones en canales electrónicos
+1. En caso de reclamos interpuestos por operaciones no reconocidas o por débitos que presenten inconsistencias o duplicidad, la empresa está obligada a efectuar una verificación técnica e integral en sus sistemas de procesamiento transaccional, logs de autenticación y servidores de pasarela.
+2. Si la empresa alega que la operación fue realizada por el usuario, corresponde a esta acreditar fehacientemente que la transacción fue autenticada con los mecanismos de seguridad y factores de autenticación reforzada exigidos por la normativa de seguridad de la información.
+3. Si la operación presentó fallas en la comunicación con pasarelas de pago o proveedores adquirentes que derivaron en cargos indebidos sin contraprestación, la empresa debe proceder a la regularización y restitución de los importes debitados.
+
+Artículo 16. Plazo máximo de atención
+1. Las empresas deben atender y dar respuesta a los reclamos presentados por los usuarios en un plazo no mayor a quince (15) días hábiles contados a partir del día siguiente de su presentación.
+2. La respuesta debe ser emitida y notificada al usuario dentro del plazo indicado a través del medio pactado o elegido por este.
+
+CAPÍTULO IV: RESOLUCIÓN Y CONTENIDO DE LA RESPUESTA
+
+Artículo 18. Contenido y fundamentación de la resolución
+1. La comunicación que contiene la respuesta al reclamo debe ser redactada en lenguaje sencillo, claro y comprensible, evitando tecnicismos innecesarios.
+2. Toda resolución debe contener obligatoriamente:
+   a) La identificación del usuario y el número único de reclamo asignado.
+   b) La descripción sucinta de los hechos objeto del reclamo (monto, fecha, código de operación).
+   c) La decisión motivada adoptada por la empresa (fundamentando claramente si el reclamo es procedente o improcedente).
+   d) Los fragmentos o sustentos fácticos y normativos que respaldan la postura de la empresa.
+   e) En caso de ser procedente, las acciones correctivas, extornos o devoluciones adoptadas y el plazo de ejecución correspondiente.
+
+Artículo 19. Información obligatoria sobre instancias de apelación y reclamo
+En toda comunicación de respuesta, independientemente del sentido de la decisión, la empresa debe informar al usuario sobre su derecho a acudir a las siguientes instancias en caso de desacuerdo:
+a) La Defensoría del Cliente Financiero (DCF), en las entidades adheridas.
+b) La Superintendencia de Banca, Seguros y Administradoras Privadas de Fondos de Pensiones (SBS).
+c) El Instituto Nacional de Defensa de la Competencia y de la Protección de la Propiedad Intelectual (INDECOPI).
+
+Artículo 21. Responsabilidad por indisponibilidad y fallas en plataformas digitales
+Las empresas son responsables por los perjuicios económicos ocasionados a los usuarios como consecuencia de deficiencias, interrupciones, caídas de servicio, fallas en la interoperabilidad de pasarelas de pago o vulnerabilidades en sus plataformas digitales de atención, salvo caso fortuito o fuerza mayor debidamente acreditados.

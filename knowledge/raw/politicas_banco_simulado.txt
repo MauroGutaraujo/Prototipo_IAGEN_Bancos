@@ -1,0 +1,35 @@
+POLÍTICA SIMULADA — BANCO ANDINO DEL PERÚ S.A.
+POLÍTICA INTERNA DE GESTIÓN Y RESOLUCIÓN DE RECLAMOS FINANCIEROS (PIR-2026-V1)
+
+CAPÍTULO I: DISPOSICIONES GENERALES
+
+Artículo 1. Objeto y Alcance
+La presente política establece los criterios operativos y deterministas para la atención, análisis y resolución de reclamos formulados por clientes personas naturales del Banco Andino del Perú respecto de servicios y productos de banca personal, tarjetas de débito/crédito, transferencias y canales digitales.
+
+Artículo 2. Plazo Normativo de Atención
+Conforme a la normativa prudencial vigente y la Ley de Protección al Consumidor, el Banco resolverá los reclamos en un plazo máximo de quince (15) días hábiles contados a partir del día siguiente de su recepción formal. 
+
+Artículo 3. Instancias de Disconformidad
+En toda resolución denegatoria o improcedente, se informará al usuario sobre su derecho de acudir a las instancias externas de protección al usuario financiero: la Defensoría del Cliente Financiero (DCF), el Departamento de Servicios al Ciudadano de la Superintendencia de Banca, Seguros y Administradoras Privadas de Fondos de Pensiones (SBS) o el Instituto Nacional de Defensa de la Competencia y de la Protección de la Propiedad Intelectual (INDECOPI).
+
+CAPÍTULO II: TRATAMIENTO DE RECLAMOS POR TIPOLOGÍA
+
+Artículo 4. Tipología C1: Cobros Duplicados y Débitos Múltiples no Voluntarios
+1. Se considera cobro duplicado cuando se evidencia la existencia de dos o más transacciones con el mismo monto exacto, moneda, código de comercio o terminal, generadas dentro de una ventana temporal no mayor a veinticuatro (24) horas sobre una misma cuenta o tarjeta.
+2. Criterio de Procedencia: Si la conciliación de registros del núcleo transaccional (Core Bancario) confirma el doble impacto y la liquidación contable de ambos cargos sin la correspondiente orden de anulación o extorno por parte de la red adquirente, el reclamo se declarará PROCEDENTE y se ordenará la devolución/extorno inmediato del importe debitado en exceso.
+3. Criterio de Improcedencia: Si la auditoría transaccional evidencia que solo existe un único cargo debitado y liquidado efectivamente, o que un segundo cargo corresponde a un código de comercio y autorización diferente derivado de una transacción legítima independiente, el reclamo se resolverá como IMPROCEDENTE.
+
+Artículo 5. Tipología C2: Operaciones No Reconocidas en Canales Digitales y Tarjetas
+1. Para operaciones no reconocidas por el cliente efectuadas a través de canales digitales (Banca Móvil, Banca por Internet) o pasarelas de comercio electrónico:
+   a) Criterio de Improcedencia: La operación se considerará imputable al titular y el reclamo se declarará IMPROCEDENTE si la transacción contó con Autenticación Reforzada de dos factores (2FA / MFA: credenciales biométricas, contraseña web/móvil más clave dinámica SMS/Token OTP) validada exitosamente en el servidor de autenticación, y fue ejecutada desde un dispositivo electrónico previamente registrado y verificado como de uso habitual del cliente, sin registro de alertas de fraude concurrentes.
+   b) Criterio de Derivación: Si la transacción se efectuó sin autenticación reforzada, desde una dirección IP o dispositivo no registrado, o si el sistema de monitoreo transaccional detectó banderas de riesgo de fraude o suplantación, el reclamo no podrá ser rechazado automáticamente y se DERIVARÁ a un analista humano especializado de la Unidad de Prevención de Fraude para peritaje técnico.
+
+Artículo 6. Tipología C3: Fallas en Pasarelas de Pago e Interoperabilidad Inmediata
+1. Tratamiento en pasarelas de pago, billeteras digitales y transferencias inmediatas:
+   a) Criterio de Procedencia: Cuando se reclame el débito de fondos en la cuenta de origen originado en una transacción que en la red de pasarela o cámara de compensación registre estado 'FALLIDA', 'TIMEOUT' o 'NO_COMPLETADA' sin abono al comercio o beneficiario, el reclamo se resolverá como PROCEDENTE, procediendo a la restitución íntegra de los fondos debitados al titular.
+   b) Criterio de Derivación: Si la transacción figura con estado 'COMPLETADA' o liquidada ante el adquirente pero el usuario manifiesta falta de entrega del bien o servicio, se DERIVARÁ a la mesa de conciliaciones con comercios asociados para requerir la confirmación formal del establecimiento adquirente.
+
+CAPÍTULO III: GUARDRAIL MONETARIO Y DE SEGURIDAD
+
+Artículo 7. Umbral de Riesgo Financiero
+Todo reclamo cuyo importe comprometido sea superior a mil y 00/100 Soles (S/ 1,000.00) o su contravalor equivalente en Dólares Americanos (calculado al tipo de cambio oficial del día de la operación) será derivado de manera obligatoria a la Jefatura de Atención al Cliente para revisión y suscripción formal por parte de un funcionario apoderado, inhibiendo cualquier resolución automatizada desatendida.
