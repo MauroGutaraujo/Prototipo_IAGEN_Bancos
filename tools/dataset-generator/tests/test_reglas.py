@@ -96,20 +96,19 @@ def test_r7(estado):
     assert evaluar(tx(estado=estado), intencion="C3") == ("Procedente", "R7")
 
 
-def test_c3_completada_no_esta_cubierta():
-    with pytest.raises(reglas.CasoNoCubierto):
-        evaluar(tx(), intencion="C3")
+def test_r7_c3_completada_se_deriva_por_conciliacion():
+    assert evaluar(tx(), intencion="C3") == ("Derivar", "R7")
 
 
-@pytest.mark.parametrize("auth,riesgo", [(False, False), (True, True), (False, True)])
-def test_r8(auth, riesgo):
-    assert evaluar(tx(autenticacion_reforzada=auth, indicador_riesgo=riesgo), intencion="C2") == ("Derivar", "R8")
+@pytest.mark.parametrize("auth,riesgo,dispositivo", [
+    (False, False, DEV), (True, True, DEV), (False, True, DEV),
+    (True, False, "DEV-OTRO"), (True, False, None),
+])
+def test_r8(auth, riesgo, dispositivo):
+    t = tx(autenticacion_reforzada=auth, indicador_riesgo=riesgo, dispositivo=dispositivo)
+    assert evaluar(t, intencion="C2") == ("Derivar", "R8")
 
 
 def test_r9():
     assert evaluar(tx(), intencion="C2") == ("Improcedente", "R9")
 
-
-def test_c2_dispositivo_no_registrado_no_esta_cubierto():
-    with pytest.raises(reglas.CasoNoCubierto):
-        evaluar(tx(dispositivo="DEV-OTRO"), intencion="C2")

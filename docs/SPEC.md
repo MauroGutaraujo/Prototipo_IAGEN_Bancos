@@ -40,18 +40,24 @@ Evaluación en orden; la primera regla que dispara define la ruta. R1–R4 tiene
 
 | Regla | Condición | Ruta |
 |---|---|---|
-| R1 | Algún campo OCR obligatorio con `c_f < 0.90` o inválido | Derivar |
-| R2 | Monto, fecha o código no coinciden entre texto (clasificador), OCR y `Transaccion` del core | Derivar |
-| R3 | Monto en soles > 1000.00 (USD se convierte con `TipoCambio` del core) | Derivar |
+| R1 | Algún campo OCR obligatorio (monto, fecha, código) sin valor que cumpla su regex o con `c_f < U_ocr` | Derivar |
+| R2 | Monto, fecha o código del texto (clasificador) o del OCR no coinciden con la `Transaccion` del core | Derivar |
+| R3 | Monto en soles > `U_riesgo` (USD se convierte con `TipoCambio` del día de la operación) | Derivar |
 | R4 | Salida del clasificador inválida o `FUERA_DE_CATALOGO` | Derivar |
 | R5 | C1 y existen 2 cargos con igual monto y comercio en ventana ≤ 24 h | Procedente (extorno) |
 | R6 | C1 y no existe cargo duplicado | Improcedente |
-| R7 | C3 y la transacción tiene estado `FALLIDA` o `NO_COMPLETADA` con cargo registrado | Procedente (devolución) |
-| R8 | C2 y la operación no tiene autenticación reforzada o tiene indicador de riesgo | Derivar |
-| R9 | C2, autenticación reforzada válida y dispositivo registrado del titular | Improcedente |
-| R10 | Toda ruta automática: verificar plazo y contenidos mínimos (lo aplica el guardrail de salida) | — |
+| R7 | C3: transacción `FALLIDA` o `NO_COMPLETADA` con cargo registrado ⇒ Procedente (devolución). Transacción `COMPLETADA` (o sin cargo) ⇒ Derivar, motivo `CONCILIACION` | Procedente / Derivar |
+| R8 | C2 y la operación no tiene autenticación reforzada, **o** tiene indicador de riesgo, **o** el dispositivo no es el registrado del titular (incluye operación sin dispositivo) | Derivar |
+| R9 | C2, autenticación reforzada válida, sin indicador de riesgo y dispositivo registrado del titular | Improcedente |
+| R10 | Toda ruta automática: verificar plazo y contenidos mínimos (lo aplica el guardrail de salida, §2.6) | — |
 
-- Tolerancias de coincidencia (R2): monto exacto a 2 decimales; fecha exacta; código exacto (normalizado a mayúsculas, sin espacios). La ventana de 24 h de R5 es parámetro configurable.
+Precisiones (aprobadas por el estudiante, 2026-09-30/10-01):
+- **R1:** un campo es válido ⇔ su valor cumple el regex **y** `c_f ≥ U_ocr` (0.90). `c_f = 0.90` exacto es válido.
+- **R2:** monto exacto a 2 decimales y misma moneda; **fecha a nivel de día**; código normalizado (mayúsculas, sin espacios). Un dato **ausente** en el texto no se compara. Texto y OCR se comparan cada uno contra el core.
+- **R3:** `monto > 1000.00` (1000.00 exacto no deriva). Si la operación es en USD y no hay `TipoCambio` para ese día ⇒ Derivar por R3, motivo `TIPO_CAMBIO_NO_DISPONIBLE`.
+- **R4:** los casos de narración ambigua del banco sintético conservan `IntencionReal` = clase del estrato; si el modelo responde `FUERA_DE_CATALOGO` cuenta como error de intención en P.
+- **R5:** mismo cliente, mismo monto, moneda y comercio, código distinto, `|Δt| ≤ VentanaDuplicadoHoras` (24 h exacta dispara R5).
+- Parámetros (`Guardrail` en configuración): `UmbralOcr = 0.90`, `UmbralRiesgoPen = 1000.00`, `VentanaDuplicadoHoras = 24`, `PlazoRespuesta` (ver §2.6).
 - Salida: `{ ruta: Derivar|Procedente|Improcedente, regla: "R1".."R9", motivo: string }`.
 - 100 % de cobertura de pruebas unitarias en este proyecto.
 
@@ -66,18 +72,21 @@ Evaluación en orden; la primera regla que dispara define la ruta. R1–R4 tiene
 
 ### 2.5 Agente Generativo (LLM)
 
-- Prompt: `prompts/generador.v1.md`. Entradas: ruta y regla decididas, hechos verificados (monto, fecha, código, comercio, estado), fragmentos admitidos con su id.
+- Prompt: `prompts/generador.v2.md` (v1 se conserva sin cambios). Entradas: ruta y regla decididas, hechos verificados (número de reclamo, monto, fecha, código, comercio, estado), **plazo aplicable** (`Guardrail:PlazoRespuesta`) y fragmentos admitidos con su id.
+- Formatos de los hechos: monto `S/ 1,234.50` o `US$ 45.00`; fecha `dd/mm/aaaa`; código tal cual el core.
 - Debe citar normas solo por el id de fragmento recibido (formato `[F:<id>]`).
 
 ### 2.6 Guardrail de salida (simbólico)
 
 Verificaciones sobre el borrador:
 1. Toda cita `[F:id]` pertenece al conjunto de fragmentos admitidos.
-2. Todo monto/fecha/código mencionado coincide con los hechos verificados.
-3. El sentido (procedente/improcedente) coincide con la ruta del Agente Legal (buscar marcadores obligatorios definidos en el prompt, p. ej. `DECISIÓN: PROCEDENTE`).
-4. Contenidos mínimos presentes (instancias a las que puede acudir el usuario, plazo, número de reclamo).
+2. Todo monto (`S/`/`US$`), fecha (`dd/mm/aaaa`, `dd-mm-aaaa` o `d de <mes> de aaaa`) y código de operación mencionado coincide con los hechos verificados.
+3. El sentido coincide con la ruta del Agente Legal: debe existir una línea `DECISIÓN: PROCEDENTE` o `DECISIÓN: IMPROCEDENTE` y ninguna contradictoria.
+4. Contenidos mínimos: número de reclamo, al menos una instancia (Defensoría del Cliente Financiero, SBS o Indecopi) y el **plazo**, que debe aparecer tal como está en `Guardrail:PlazoRespuesta`.
+- **Plazo:** su valor lo fija el estudiante desde la normativa vigente (Res. SBS N.° 04036-2022); el código no trae valor por defecto y el guardrail falla al construirse si falta.
 - Falla ⇒ 1 regeneración ⇒ si falla otra vez ⇒ Derivar (motivo `GUARDRAIL_SALIDA`).
-- Registrar afirmaciones verificables y no sustentadas (para TA).
+- **Afirmaciones para TA:** *verificable* = cada mención de monto, fecha o código de operación en el borrador y cada cita `[F:id]`; *no sustentada* = la que no coincide con los hechos verificados o cita un fragmento no admitido. TA = no sustentadas / verificables.
+- En ablación T2 el guardrail se ejecuta y registra su veredicto, pero no bloquea.
 
 ## 3. Datos
 

@@ -7,6 +7,8 @@ Convenciones (deben coincidir con el Agente Legal de H3):
   del texto y del voucher contra la transacción del core. Un dato ausente en el texto no se compara.
 - R3: monto en soles > 1000.00; USD × TipoCambio del día de la transacción.
 - R5: otro cargo del mismo cliente, igual monto, moneda y comercio, |Δt| ≤ 24 h.
+- R7: C3 COMPLETADA (o sin cargo) ⇒ Derivar por conciliación.
+- R8: C2 sin autenticación reforzada, con riesgo o con dispositivo no registrado ⇒ Derivar.
 """
 from __future__ import annotations
 
@@ -17,10 +19,6 @@ from .modelo import CAMPOS_OCR, DatosTexto, DatosVoucher, Transaccion
 
 UMBRAL_RIESGO_PEN = Decimal("1000.00")
 VENTANA_DUPLICADO = timedelta(hours=24)
-
-
-class CasoNoCubierto(Exception):
-    """Combinación de datos que la SPEC no resuelve con R1–R9. El generador no debe producirla."""
 
 
 def normalizar_codigo(codigo: str) -> str:
@@ -83,11 +81,9 @@ def evaluar(
     if texto.intencion == "C3":
         if tx.estado in ("FALLIDA", "NO_COMPLETADA") and tx.monto > 0:
             return "Procedente", "R7"
-        raise CasoNoCubierto(f"C3 con estado {tx.estado}: ninguna regla R1–R9 aplica")
+        return "Derivar", "R7"  # conciliación
 
     # C2
-    if not tx.autenticacion_reforzada or tx.indicador_riesgo:
+    if not tx.autenticacion_reforzada or tx.indicador_riesgo or tx.dispositivo != dispositivo_registrado:
         return "Derivar", "R8"
-    if tx.dispositivo == dispositivo_registrado:
-        return "Improcedente", "R9"
-    raise CasoNoCubierto("C2 con autenticación reforzada, sin riesgo y dispositivo no registrado")
+    return "Improcedente", "R9"

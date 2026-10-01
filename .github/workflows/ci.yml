@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  dotnet:
+    name: .NET (build, tests y cobertura)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: dotnet build Reclamos.sln
+
+      - name: Tests
+        run: dotnet test --solution Reclamos.sln --no-build
+
+      - name: Cobertura de Reclamos.Guardrails
+        run: >
+          dotnet test --project tests/Reclamos.Guardrails.Tests --no-build
+          --coverage --coverage-output-format cobertura --coverage-output guardrails.cobertura.xml
+          --results-directory "${{ github.workspace }}/TestResults"
+
+      - name: Exigir 100 % de líneas y ramas en Reclamos.Guardrails
+        run: python3 .github/scripts/cobertura.py TestResults Reclamos.Guardrails
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: cobertura
+          path: TestResults
+
+  python:
+    name: Python (generador del banco)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools/dataset-generator
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Dependencias
+        run: |
+          sudo apt-get update && sudo apt-get install -y unixodbc
+          pip install -r requirements.txt
+
+      - name: Tests
+        run: python -m pytest -q

@@ -16,17 +16,18 @@ public class ArquitecturaTests
         "SixLabors",
     ];
 
-    public static TheoryData<string> Ensamblados => new()
+    [Fact]
+    public void Guardrails_no_referencia_infraestructura()
     {
-        typeof(Expediente).Assembly.GetName().Name!,
-        typeof(AssemblyMarker).Assembly.GetName().Name!,
-    };
+        var referencias = typeof(AssemblyMarker).Assembly.GetReferencedAssemblies().Select(a => a.Name ?? "");
 
-    [Theory]
-    [MemberData(nameof(Ensamblados))]
-    public void No_referencia_infraestructura(string ensamblado)
+        Assert.DoesNotContain(referencias, r => Prohibidas.Any(p => r.StartsWith(p, StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public void Domain_no_referencia_infraestructura()
     {
-        var referencias = Assembly.Load(ensamblado).GetReferencedAssemblies().Select(a => a.Name ?? "");
+        var referencias = typeof(Expediente).Assembly.GetReferencedAssemblies().Select(a => a.Name ?? "");
 
         Assert.DoesNotContain(referencias, r => Prohibidas.Any(p => r.StartsWith(p, StringComparison.Ordinal)));
     }

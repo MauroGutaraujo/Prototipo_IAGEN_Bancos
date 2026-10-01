@@ -60,6 +60,4 @@ python -m pytest
   - código `AN` + 8 caracteres `[0-9A-Z]` sin I ni O, precedido de «Operación» o «Cód. operación».
 - **R2** compara el monto (misma moneda, 2 decimales), la **fecha a nivel de día** y el código normalizado. Un dato ausente en la narración no se compara.
 - **R5:** mismo cliente, monto, moneda y comercio, con |Δt| ≤ 24 h.
-- **Vacíos de la SPEC** (el generador no los produce; H3 debe definirlos):
-  - C2 con autenticación reforzada, sin riesgo y con un dispositivo no registrado;
-  - C3 con estado `COMPLETADA`.
+- **R7 y R8 ampliadas** (SPEC §2.3): C3 `COMPLETADA` ⇒ Derivar por conciliación (R7); C2 con dispositivo no registrado ⇒ Derivar (R8). El banco no contiene casos de ese tipo.

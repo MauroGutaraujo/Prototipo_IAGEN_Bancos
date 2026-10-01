@@ -1,4 +1,9 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
+using Reclamos.Application.Agentes;
+using Reclamos.Guardrails;
+using Reclamos.Guardrails.Legal;
+using Reclamos.Guardrails.Salida;
 using Reclamos.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +15,14 @@ var connectionString = builder.Configuration.GetConnectionString("Reclamos")
         "Falta la cadena de conexión: define SQL_CONN o ConnectionStrings:Reclamos (user-secrets).");
 
 builder.Services.AddInfrastructure(connectionString);
+
+// Agentes simbólicos con los parámetros de la tesis (sección "Guardrail").
+// GuardrailSalida exige Guardrail:PlazoRespuesta: falla al resolverse si no está configurado.
+builder.Services.Configure<GuardrailOptions>(builder.Configuration.GetSection(GuardrailOptions.Seccion));
+builder.Services.AddSingleton<ILegalAgent>(sp =>
+    new LegalAgent(new AgenteLegal(sp.GetRequiredService<IOptions<GuardrailOptions>>().Value)));
+builder.Services.AddSingleton<IOutputGuardrail>(sp =>
+    new OutputGuardrail(new GuardrailSalida(sp.GetRequiredService<IOptions<GuardrailOptions>>().Value)));
 
 var app = builder.Build();
 
