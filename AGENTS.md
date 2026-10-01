@@ -47,7 +47,7 @@ db/schema.sql                Esquema de referencia
 | Parámetro | Valor |
 |---|---|
 | Umbral OCR `U_ocr` | 0.90 (confianza normalizada 0–1 por campo) |
-| Umbral similitud `θ` (Pinecone, coseno) | 0.78 |
+| Umbral similitud `θ` (Pinecone, coseno) | 0.35 (calibrado para `llama-text-embed-v2`; originalmente 0.78, ver SPEC §2.4) |
 | Fragmentos recuperados `k` | 5 |
 | Umbral de riesgo monetario `U_riesgo` | S/ 1,000.00 (monto > umbral ⇒ derivar) |
 | Regeneraciones del borrador | 1 como máximo |

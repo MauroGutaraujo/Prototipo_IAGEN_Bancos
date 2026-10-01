@@ -8,4 +8,4 @@ description: "Reglas de integridad científica de la tesis: nunca inventar resul
 - No escribas números de resultados en código, tests, README, prompts ni documentos. Los tests verifican comportamiento, no metas de desempeño.
 - Si una corrida falla o está incompleta, se reporta como tal; no se interpola ni se reemplaza.
 - La tabla `eval.VerdadReferencia` no se lee desde `src/` en tiempo de ejecución. Solo la leen `tools/analysis` y los tests de evaluación.
-- Cualquier cambio en umbrales (0.90, 0.78, S/ 1,000, k = 5), reglas R1–R9, prompts o métricas debe anunciarse al estudiante porque obliga a actualizar la tesis.
+- Cualquier cambio en umbrales (0.90, θ = 0.35, S/ 1,000, k = 5), reglas R1–R9, prompts o métricas debe anunciarse al estudiante porque obliga a actualizar la tesis.

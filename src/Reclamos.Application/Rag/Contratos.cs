@@ -11,7 +11,7 @@ public sealed class RagOptions
     public bool Enabled { get; set; } = true;
 
     /// <summary>θ: score coseno mínimo para admitir un fragmento (igual a θ se admite).</summary>
-    public double Theta { get; set; } = 0.78;
+    public double Theta { get; set; } = 0.35;
 
     public int TopK { get; set; } = 5;
 

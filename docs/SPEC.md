@@ -74,13 +74,17 @@ Precisiones (aprobadas por el estudiante, 2026-09-30/10-01):
 - **Corpus:** `knowledge/fragmentos.jsonl` (versionado, SHA-256 en `knowledge/manifest.json`), un fragmento por artículo con id estable `<norma>-art-<n>`. Las normas oficiales se extraen **literalmente** de los PDF publicados por la fuente oficial (URL y SHA-256 fijados en `tools/knowledge/fragmentar.py`); la política interna PIR-2026-V1 es **simulada** y está declarada como tal. Selección: Res. SBS N.° 04036-2022 (Reglamento, arts. 1–19); Ley N.° 29571 (arts. 18, 19, 24, 81–96 incl. 90-A, 150–152); Ley N.° 31435 (artículo único).
 - **Embeddings:** `llama-text-embed-v2` de **Pinecone Inference** (1024 dimensiones, multilingüe; cambio decidido por el estudiante el 2026-10-01 para mantener el desarrollo sin costo: solo se usa `PINECONE_API_KEY`). El mismo modelo indexa (`input_type = passage`) y consulta (`input_type = query`), con `truncate = NONE` (si un fragmento excediera el límite del modelo, el indexador falla en vez de truncarlo). Se embebe «nombre de la norma + texto del artículo»; la consulta se embebe tal cual. Índice Pinecone serverless, métrica `cosine`, dimensión 1024. Los vectores de cada versión del corpus van en el namespace `corpus-<12 primeros caracteres del SHA-256>`, de modo que una consulta nunca mezcla versiones.
 - **Consulta** (plantilla `consulta.v1`) = intención + ruta + regla aplicada. Como solo 4 combinaciones llegan a redacción (C1-R5, C1-R6, C2-R9, C3-R7), la recuperación es la misma para todos los casos de una combinación.
-- `topK = 5`. Se admiten los fragmentos con `score ≥ θ` (θ = 0.78; el valor igual a θ se admite).
+- `topK = 5`. Se admiten los fragmentos con `score ≥ θ` (**θ = 0.35**; el valor igual a θ se admite).
 - **Calificación CRAG:**
   - **Correcta:** ≥ 1 fragmento admitido en la primera consulta.
   - **Ambigua:** ninguno en la primera; ≥ 1 tras **una** reformulación (se agregan los nombres de las normas y términos de la tipología).
   - **Incorrecta:** ninguno tras reformular ⇒ Derivar (estado `Derivado`, motivo `CRAG_INCORRECTA`).
   - **Omitida:** ablación T2 (`Rag:Enabled=false`): no se consulta Pinecone y el generador recibe solo hechos. En ablación **el guardrail de salida se ejecuta pero no bloquea** (se registra su veredicto para medir TA).
-- **θ se revisa antes de congelarse** con consultas de DESARROLLO redactadas aparte (nunca casos de evaluación). Si 0.78 no separa fragmentos pertinentes de no pertinentes con este modelo, se informa al estudiante con la evidencia; el valor no se cambia sin su decisión (es parámetro de la tesis).
+- **Calibración de θ (2026-10-01, decisión del estudiante).** El valor original 0.78 no admitía ningún fragmento con `llama-text-embed-v2`: la escala del score coseno depende del modelo de embeddings. θ se recalibró con 13 consultas de DESARROLLO redactadas aparte (`knowledge/consultas_desarrollo.jsonl`: 11 con fragmentos pertinentes etiquetados y validados por el estudiante, y 2 controles negativos), nunca con casos de evaluación:
+  - barrido de θ entre 0.30 y 0.60 (paso 0.05) sobre el top-K de cada consulta (prueba `CalibracionRag`, CI con la etiqueta de calibración);
+  - criterio: máximo número de fragmentos pertinentes admitidos con **cero** admitidos en los controles negativos; desempate por menos fragmentos no pertinentes admitidos;
+  - resultado: θ = 0.35. Limitaciones a declarar en la tesis: conjunto de desarrollo pequeño, y con este θ también se admiten fragmentos no pertinentes (el guardrail de salida verifica que las citas sean de fragmentos admitidos, no su pertinencia).
+  - Si cambia el modelo de embeddings o el corpus, θ debe recalibrarse con el mismo procedimiento.
 - Registrar en `app.Recuperacion`: calificación y `FragmentosJson` = `[{id, score, admitido, consulta}]` de cada consulta realizada; además `t_RAG` en `Ejecucion` y la versión del corpus.
 
 ### 2.5 Agente Generativo (LLM)

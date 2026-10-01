@@ -30,7 +30,7 @@ Cada hito termina con: pruebas en verde, commit y un resumen breve. No avanzar a
 
 ## H5 — Base de conocimiento y CRAG (2 días)
 - Colocar normas en `knowledge/raw`, fragmentar por artículo, indexar en Pinecone (`/indexar-normativa`).
-- Implementar recuperación, umbral 0.78, reformulación única, derivación.
+- Implementar recuperación, umbral θ (0.35, calibrado para `llama-text-embed-v2`; SPEC §2.4), reformulación única, derivación.
 - **Listo cuando:** consulta de prueba devuelve fragmentos con score y el flag de ablación desactiva la recuperación.
 
 ## H6 — Clasificador y generador con Semantic Kernel (3 días)
