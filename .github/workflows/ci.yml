@@ -150,9 +150,13 @@ jobs:
           dotnet build src/Reclamos.Indexador
           dotnet build tests/Reclamos.Infrastructure.Tests
 
-      # La indexación modifica Pinecone: solo con [indexar] en el mensaje del commit.
+      - name: Estado de los secrets (solo si existen, nunca su valor)
+        run: |
+          echo "::notice title=Secrets RAG::PINECONE_API_KEY=$([ -n "$PINECONE_API_KEY" ] && echo configurada || echo FALTA) EMBEDDING_API_KEY=$([ -n "$EMBEDDING_API_KEY" ] && echo configurada || echo FALTA)"
+
+      # La indexación modifica Pinecone: solo con la etiqueta [indexar-pinecone] en el mensaje del commit.
       - name: Indexar corpus normativo
-        if: contains(github.event.head_commit.message, '[indexar]')
+        if: contains(github.event.head_commit.message, '[indexar-pinecone]')
         run: dotnet run --project src/Reclamos.Indexador --no-build
 
       - name: Integración RAG (3 consultas, reporta sin umbrales)

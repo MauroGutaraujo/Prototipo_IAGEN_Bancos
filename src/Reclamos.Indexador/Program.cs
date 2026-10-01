@@ -7,6 +7,17 @@ using Pinecone;
 using Reclamos.Application.Rag;
 using Reclamos.Infrastructure.Rag;
 
+var enCi = Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
+void Error(string mensaje)
+{
+    Console.Error.WriteLine(mensaje);
+    if (enCi)
+        Console.WriteLine($"::error title=Indexador::{mensaje.ReplaceLineEndings(" ")}");
+}
+
+AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+    Error($"{e.ExceptionObject.GetType().Name}: {(e.ExceptionObject as Exception)?.Message}");
+
 const string Nube = "aws";
 const string Region = "us-east-1";
 const int Lote = 50;
@@ -16,7 +27,7 @@ var claves = new ClavesRag(
     Environment.GetEnvironmentVariable("EMBEDDING_API_KEY"));
 if (string.IsNullOrWhiteSpace(claves.Pinecone) || string.IsNullOrWhiteSpace(claves.Embeddings))
 {
-    Console.Error.WriteLine("Faltan PINECONE_API_KEY y/o EMBEDDING_API_KEY.");
+    Error("Faltan PINECONE_API_KEY y/o EMBEDDING_API_KEY.");
     return 1;
 }
 
@@ -53,7 +64,7 @@ for (var intento = 0; !indice.Status.Ready; intento++)
 {
     if (intento == 60)
     {
-        Console.Error.WriteLine("El índice no quedó listo en 2 minutos.");
+        Error("El índice no quedó listo en 2 minutos.");
         return 1;
     }
     await Task.Delay(TimeSpan.FromSeconds(2));
@@ -62,7 +73,7 @@ for (var intento = 0; !indice.Status.Ready; intento++)
 
 if (indice.Dimension != opciones.Dimension || indice.Metric != IndexModelMetric.Cosine)
 {
-    Console.Error.WriteLine($"El índice existe con dimensión {indice.Dimension} y métrica {indice.Metric}; se esperaba {opciones.Dimension}/cosine.");
+    Error($"El índice existe con dimensión {indice.Dimension} y métrica {indice.Metric}; se esperaba {opciones.Dimension}/cosine.");
     return 1;
 }
 
