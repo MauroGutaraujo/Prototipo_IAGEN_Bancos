@@ -88,6 +88,17 @@ jobs:
         working-directory: tools/dataset-generator
         run: python generate.py --seed 7 --out data-dev/
 
+      - name: Diagnóstico de Tesseract (banco de desarrollo)
+        if: contains(github.event.head_commit.message, '[ajuste-ocr]')
+        run: |
+          img=tools/dataset-generator/data-dev/vouchers/0001.jpg
+          a=$(tesseract "$img" stdout -l spa --psm 6 --tessdata-dir "$TESSDATA_DIR" tsv 2>&1 | head -12)
+          b=$(tesseract stdin stdout -l spa --psm 6 --tessdata-dir "$TESSDATA_DIR" tsv < "$img" 2>&1 | head -12)
+          esc() { printf '%s' "$1" | sed ':a;N;$!ba;s/%/%25/g;s/
+/%0A/g'; }
+          echo "::notice title=Tesseract con archivo::$(esc "$a")"
+          echo "::notice title=Tesseract con stdin::$(esc "$b")"
+
       - name: Build
         run: dotnet build tests/Reclamos.Infrastructure.Tests
 

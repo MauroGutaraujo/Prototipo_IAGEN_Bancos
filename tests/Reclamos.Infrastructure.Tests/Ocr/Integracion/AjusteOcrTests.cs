@@ -37,11 +37,18 @@ public class AjusteOcrTests
         var agente = BancoSintetico.Agente(Grilla()[configuracion]);
         var ct = TestContext.Current.CancellationToken;
 
-        int monto = 0, fecha = 0, codigo = 0, validos = 0, n = 0;
+        int monto = 0, fecha = 0, codigo = 0, validos = 0, n = 0, errores = 0;
+        string? primerError = null;
         foreach (var v in BancoSintetico.Vouchers("data-dev", Cantidad))
         {
-            var r = (await agente.ExtraerAsync(v.Ruta, ct)).Resultado;
+            var lectura = await agente.ExtraerAsync(v.Ruta, ct);
+            var r = lectura.Resultado;
             n++;
+            if (lectura.Error is not null)
+            {
+                errores++;
+                primerError ??= lectura.Error;
+            }
             var m = r.Monto == v.Monto && r.Moneda == v.Moneda;
             var f = r.FechaHora is { } fh && DateOnly.FromDateTime(fh) == v.Fecha;
             var c = r.Codigo == v.Codigo;
@@ -55,8 +62,11 @@ public class AjusteOcrTests
         lock (Archivo)
         {
             if (!File.Exists(archivo))
-                File.WriteAllText(archivo, "configuracion,n,monto_ok,fecha_ok,codigo_ok,tres_ok_y_validos\n");
-            File.AppendAllText(archivo, $"\"{configuracion}\",{n},{monto},{fecha},{codigo},{validos}\n", Encoding.UTF8);
+                File.WriteAllText(archivo, "configuracion,n,monto_ok,fecha_ok,codigo_ok,tres_ok_y_validos,errores,primer_error\n");
+            var error = (primerError ?? "").Replace('"', '\'').Replace('\n', ' ');
+            error = error[..Math.Min(error.Length, 200)];
+            File.AppendAllText(archivo,
+                $"\"{configuracion}\",{n},{monto},{fecha},{codigo},{validos},{errores},\"{error}\"\n", Encoding.UTF8);
         }
     }
 }
