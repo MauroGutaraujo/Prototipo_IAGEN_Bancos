@@ -173,7 +173,7 @@ jobs:
       - name: Publicar reportes como anotaciones
         if: always()
         run: |
-          for f in calibracion_theta calibracion_theta_top5; do
+          for f in calibracion_theta calibracion_theta_top5 calibracion_theta_barrido; do
             if [ -f TestResults/rag/$f.csv ]; then
               python3 .github/scripts/csv_anotacion.py TestResults/rag/$f.csv "RAG $f"
             fi

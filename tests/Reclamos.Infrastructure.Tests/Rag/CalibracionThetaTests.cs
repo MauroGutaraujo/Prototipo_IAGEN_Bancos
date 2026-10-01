@@ -43,6 +43,8 @@ public class CalibracionThetaTests
             "consulta,tema,n_pertinentes,max_pertinente,min_pertinente,max_no_pertinente,pertinentes_sobre_theta,no_pertinentes_sobre_theta\n");
         var detalle = new StringBuilder("consulta,id,score,pertinente\n");
         var top5 = new StringBuilder("consulta,rango,id,score,pertinente\n");
+        // Top-K de cada consulta, tal como lo ve el CRAG en ejecución (para el barrido de θ).
+        var recuperados = new List<(ConsultaDesarrollo Consulta, List<FragmentoRecuperado> TopK)>();
         foreach (var c in consultas)
         {
             // Score de TODOS los fragmentos: topK = tamaño del corpus.
@@ -59,6 +61,33 @@ public class CalibracionThetaTests
                 detalle.AppendLine(string.Join(',', c.Id, f.Id, S(f.Score), c.Pertinentes.Contains(f.Id) ? 1 : 0));
             foreach (var (f, i) in todos.OrderByDescending(f => f.Score).Take(5).Select((f, i) => (f, i)))
                 top5.AppendLine(string.Join(',', c.Id, i + 1, f.Id, S(f.Score), c.Pertinentes.Contains(f.Id) ? 1 : 0));
+            recuperados.Add((c, todos.OrderByDescending(f => f.Score).Take(opciones.TopK).ToList()));
+        }
+
+        // Barrido de θ sobre el top-K: cuánto de lo pertinente se admite y cuánto ruido entra.
+        var positivas = recuperados.Where(r => r.Consulta.Pertinentes.Length > 0).ToList();
+        var negativas = recuperados.Where(r => r.Consulta.Pertinentes.Length == 0).ToList();
+        var totalPertinentes = positivas.Sum(r => r.Consulta.Pertinentes.Length);
+        var barrido = new StringBuilder(
+            "theta,consultas_con_pertinente_admitido,consultas_positivas,pertinentes_admitidos,pertinentes_etiquetados," +
+            "no_pertinentes_admitidos,admitidos_en_controles_negativos,precision,recall\n");
+        for (var paso = 0; paso <= 6; paso++)
+        {
+            var theta = 0.30 + paso * 0.05;
+            int conPertinente = 0, tp = 0, fp = 0;
+            foreach (var (c, topK) in positivas)
+            {
+                var admitidos = topK.Where(f => f.Score >= theta).ToList();
+                var verdaderos = admitidos.Count(f => c.Pertinentes.Contains(f.Id));
+                conPertinente += verdaderos > 0 ? 1 : 0;
+                tp += verdaderos;
+                fp += admitidos.Count - verdaderos;
+            }
+            var enNegativos = negativas.Sum(r => r.TopK.Count(f => f.Score >= theta));
+            barrido.AppendLine(string.Join(',',
+                theta.ToString("0.00", CultureInfo.InvariantCulture), conPertinente, positivas.Count, tp, totalPertinentes,
+                fp, enNegativos,
+                tp + fp == 0 ? "" : S((double)tp / (tp + fp)), S((double)tp / totalPertinentes)));
         }
 
         var dir = Environment.GetEnvironmentVariable("RAG_REPORTES_DIR") ?? Path.Combine(Path.GetTempPath(), "rag");
@@ -66,6 +95,7 @@ public class CalibracionThetaTests
         await File.WriteAllTextAsync(Path.Combine(dir, "calibracion_theta.csv"), resumen.ToString(), ct);
         await File.WriteAllTextAsync(Path.Combine(dir, "calibracion_theta_detalle.csv"), detalle.ToString(), ct);
         await File.WriteAllTextAsync(Path.Combine(dir, "calibracion_theta_top5.csv"), top5.ToString(), ct);
+        await File.WriteAllTextAsync(Path.Combine(dir, "calibracion_theta_barrido.csv"), barrido.ToString(), ct);
         TestContext.Current.TestOutputHelper?.WriteLine(resumen.ToString());
     }
 
