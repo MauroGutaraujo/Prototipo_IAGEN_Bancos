@@ -30,13 +30,16 @@ public enum ModoBinarizacion
     Adaptativa,
 }
 
-/// <summary>Parámetros del preprocesamiento. Se eligen SOLO con el banco de desarrollo (seed 7).</summary>
+/// <summary>
+/// Parámetros del preprocesamiento. Los valores por defecto son los elegidos con el banco de
+/// desarrollo (seed 7) según el criterio de la SPEC §2.1; nunca se ajustan con el de evaluación.
+/// </summary>
 public sealed class PreprocesamientoOptions
 {
     /// <summary>Factor de escala antes de enderezar (1 = sin cambio).</summary>
-    public float Escala { get; set; } = 1f;
+    public float Escala { get; set; } = 1.5f;
 
-    public bool Enderezar { get; set; } = true;
+    public bool Enderezar { get; set; }
 
     /// <summary>Ángulo máximo (grados) que se explora al enderezar.</summary>
     public float AnguloMaximo { get; set; } = 3f;
