@@ -19,11 +19,8 @@ public class CalibracionThetaTests
     [Fact]
     public async Task Distribucion_de_scores_de_las_consultas_de_desarrollo()
     {
-        var claves = new ClavesRag(
-            Environment.GetEnvironmentVariable("PINECONE_API_KEY"),
-            Environment.GetEnvironmentVariable("EMBEDDING_API_KEY"));
-        Assert.SkipWhen(string.IsNullOrWhiteSpace(claves.Pinecone) || string.IsNullOrWhiteSpace(claves.Embeddings),
-            "Faltan PINECONE_API_KEY / EMBEDDING_API_KEY");
+        var claves = new ClavesRag(Environment.GetEnvironmentVariable("PINECONE_API_KEY"));
+        Assert.SkipWhen(string.IsNullOrWhiteSpace(claves.Pinecone), "Falta PINECONE_API_KEY");
 
         var ct = TestContext.Current.CancellationToken;
         var opciones = new RagOptions();
@@ -40,7 +37,7 @@ public class CalibracionThetaTests
             .ToList();
 
         var buscador = new PineconeBuscadorVectorial(
-            opciones, claves, new GeneradorEmbeddingsOpenAI(opciones, claves), new Lazy<CorpusNormativo>(corpus));
+            opciones, claves, new GeneradorEmbeddingsPinecone(opciones, claves), new Lazy<CorpusNormativo>(corpus));
 
         var resumen = new StringBuilder(
             "consulta,tema,n_pertinentes,max_pertinente,min_pertinente,max_no_pertinente,pertinentes_sobre_theta,no_pertinentes_sobre_theta\n");

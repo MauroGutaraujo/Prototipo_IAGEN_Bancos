@@ -25,11 +25,8 @@ public class RagIntegracionTests
     [Fact]
     public async Task Tres_consultas_una_por_tipologia()
     {
-        var claves = new ClavesRag(
-            Environment.GetEnvironmentVariable("PINECONE_API_KEY"),
-            Environment.GetEnvironmentVariable("EMBEDDING_API_KEY"));
-        Assert.SkipWhen(string.IsNullOrWhiteSpace(claves.Pinecone) || string.IsNullOrWhiteSpace(claves.Embeddings),
-            "Faltan PINECONE_API_KEY / EMBEDDING_API_KEY");
+        var claves = new ClavesRag(Environment.GetEnvironmentVariable("PINECONE_API_KEY"));
+        Assert.SkipWhen(string.IsNullOrWhiteSpace(claves.Pinecone), "Falta PINECONE_API_KEY");
 
         var ct = TestContext.Current.CancellationToken;
         var opciones = new RagOptions();
@@ -50,7 +47,7 @@ public class RagIntegracionTests
         }
 
         var buscador = new PineconeBuscadorVectorial(
-            opciones, claves, new GeneradorEmbeddingsOpenAI(opciones, claves), new Lazy<CorpusNormativo>(corpus));
+            opciones, claves, new GeneradorEmbeddingsPinecone(opciones, claves), new Lazy<CorpusNormativo>(corpus));
         var crag = new RecuperadorCrag(opciones, buscador);
 
         var csv = new StringBuilder("combinacion,calificacion,consulta,id,score,admitido\n");

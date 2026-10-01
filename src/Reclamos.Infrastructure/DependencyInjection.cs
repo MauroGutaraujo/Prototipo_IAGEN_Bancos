@@ -30,19 +30,19 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// Recuperación normativa CRAG (Pinecone + embeddings OpenAI). Las opciones <see cref="RagOptions"/>
+    /// Recuperación normativa CRAG (Pinecone: embeddings de Pinecone Inference + búsqueda). Las opciones <see cref="RagOptions"/>
     /// se enlazan en la API; las claves llegan solo por variables de entorno / user-secrets.
     /// </summary>
-    public static IServiceCollection AddRag(this IServiceCollection services, string? pineconeApiKey, string? embeddingApiKey)
+    public static IServiceCollection AddRag(this IServiceCollection services, string? pineconeApiKey)
     {
-        services.AddSingleton(new ClavesRag(pineconeApiKey, embeddingApiKey));
+        services.AddSingleton(new ClavesRag(pineconeApiKey));
         services.AddSingleton(sp =>
         {
             var o = sp.GetRequiredService<IOptions<RagOptions>>().Value;
             return new Lazy<CorpusNormativo>(() => CorpusNormativo.Cargar(o.CorpusPath, o.CorpusSha256));
         });
         services.AddSingleton<IGeneradorEmbeddings>(sp =>
-            new GeneradorEmbeddingsOpenAI(sp.GetRequiredService<IOptions<RagOptions>>().Value, sp.GetRequiredService<ClavesRag>()));
+            new GeneradorEmbeddingsPinecone(sp.GetRequiredService<IOptions<RagOptions>>().Value, sp.GetRequiredService<ClavesRag>()));
         services.AddSingleton<IBuscadorVectorial>(sp => new PineconeBuscadorVectorial(
             sp.GetRequiredService<IOptions<RagOptions>>().Value,
             sp.GetRequiredService<ClavesRag>(),

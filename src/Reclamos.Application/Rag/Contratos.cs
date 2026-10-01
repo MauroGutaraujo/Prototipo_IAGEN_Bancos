@@ -15,9 +15,9 @@ public sealed class RagOptions
 
     public int TopK { get; set; } = 5;
 
-    public string EmbeddingModel { get; set; } = "text-embedding-3-small";
+    public string EmbeddingModel { get; set; } = "llama-text-embed-v2";
 
-    public int Dimension { get; set; } = 1536;
+    public int Dimension { get; set; } = 1024;
 
     public string Index { get; set; } = "normativa-reclamos";
 

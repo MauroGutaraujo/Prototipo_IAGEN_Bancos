@@ -132,11 +132,10 @@ jobs:
           path: TestResults
 
   rag:
-    name: RAG (Pinecone + embeddings)
+    name: RAG (Pinecone Inference + búsqueda)
     runs-on: ubuntu-24.04
     env:
       PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
-      EMBEDDING_API_KEY: ${{ secrets.EMBEDDING_API_KEY }}
       RAG_REPORTES_DIR: ${{ github.workspace }}/TestResults/rag
     steps:
       - uses: actions/checkout@v7
@@ -152,7 +151,7 @@ jobs:
 
       - name: Estado de los secrets (solo si existen, nunca su valor)
         run: |
-          echo "::notice title=Secrets RAG::PINECONE_API_KEY=$([ -n "$PINECONE_API_KEY" ] && echo configurada || echo FALTA) EMBEDDING_API_KEY=$([ -n "$EMBEDDING_API_KEY" ] && echo configurada || echo FALTA)"
+          echo "::notice title=Secrets RAG::PINECONE_API_KEY=$([ -n "$PINECONE_API_KEY" ] && echo configurada || echo FALTA)"
 
       # La indexación modifica Pinecone: solo con la etiqueta [indexar-pinecone] en el mensaje del commit.
       - name: Indexar corpus normativo

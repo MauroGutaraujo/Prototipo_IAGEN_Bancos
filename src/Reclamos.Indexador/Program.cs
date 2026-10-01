@@ -1,5 +1,5 @@
 // Indexa knowledge/fragmentos.jsonl en Pinecone (SPEC §2.4).
-// Claves solo por variables de entorno: PINECONE_API_KEY, EMBEDDING_API_KEY (y opcional PINECONE_INDEX).
+// Clave solo por variable de entorno: PINECONE_API_KEY (y opcional PINECONE_INDEX). Embeddings: Pinecone Inference.
 // Idempotente: ids estables por fragmento y un namespace por versión del corpus (corpus-<sha256[..12]>).
 
 using System.Text.Json;
@@ -18,16 +18,13 @@ void Error(string mensaje)
 AppDomain.CurrentDomain.UnhandledException += (_, e) =>
     Error($"{e.ExceptionObject.GetType().Name}: {(e.ExceptionObject as Exception)?.Message}");
 
-const string Nube = "aws";
 const string Region = "us-east-1";
 const int Lote = 50;
 
-var claves = new ClavesRag(
-    Environment.GetEnvironmentVariable("PINECONE_API_KEY"),
-    Environment.GetEnvironmentVariable("EMBEDDING_API_KEY"));
-if (string.IsNullOrWhiteSpace(claves.Pinecone) || string.IsNullOrWhiteSpace(claves.Embeddings))
+var claves = new ClavesRag(Environment.GetEnvironmentVariable("PINECONE_API_KEY"));
+if (string.IsNullOrWhiteSpace(claves.Pinecone))
 {
-    Error("Faltan PINECONE_API_KEY y/o EMBEDDING_API_KEY.");
+    Error("Falta PINECONE_API_KEY.");
     return 1;
 }
 
@@ -42,14 +39,34 @@ var ns = RagOptions.Namespace(corpus.Sha256);
 Console.WriteLine($"Corpus: {corpus.Fragmentos.Count} fragmentos, SHA-256 {corpus.Sha256} → namespace {ns}");
 
 var pinecone = new PineconeClient(claves.Pinecone);
-Pinecone.Index indice;
-try
+var indice = await DescribirAsync();
+
+// Un índice con otra dimensión o métrica solo se recrea si está VACÍO (p. ej. el que dejó una corrida fallida).
+if (indice is not null && (indice.Dimension != opciones.Dimension || indice.Metric != IndexModelMetric.Cosine))
 {
-    indice = await pinecone.DescribeIndexAsync(opciones.Index);
+    var stats = await pinecone.Index(opciones.Index).DescribeIndexStatsAsync(new DescribeIndexStatsRequest());
+    if ((stats.TotalVectorCount ?? 0) > 0)
+    {
+        Error($"El índice {opciones.Index} tiene dimensión {indice.Dimension}/{indice.Metric} y {stats.TotalVectorCount} vectores; " +
+              $"se esperaba {opciones.Dimension}/cosine. No se borra un índice con datos: usa otro nombre (PINECONE_INDEX).");
+        return 1;
+    }
+    Console.WriteLine($"El índice {opciones.Index} está vacío y tiene dimensión {indice.Dimension}: se elimina y se recrea.");
+    await pinecone.DeleteIndexAsync(opciones.Index);
+    for (var intento = 0; (indice = await DescribirAsync()) is not null; intento++)
+    {
+        if (intento == 60)
+        {
+            Error("El índice no terminó de eliminarse en 2 minutos.");
+            return 1;
+        }
+        await Task.Delay(TimeSpan.FromSeconds(2));
+    }
 }
-catch (NotFoundError)
+
+if (indice is null)
 {
-    Console.WriteLine($"Creando índice {opciones.Index} (serverless {Nube}/{Region}, cosine, {opciones.Dimension})");
+    Console.WriteLine($"Creando índice {opciones.Index} (serverless aws/{Region}, cosine, {opciones.Dimension})");
     indice = await pinecone.CreateIndexAsync(new CreateIndexRequest
     {
         Name = opciones.Index,
@@ -71,19 +88,14 @@ for (var intento = 0; !indice.Status.Ready; intento++)
     indice = await pinecone.DescribeIndexAsync(opciones.Index);
 }
 
-if (indice.Dimension != opciones.Dimension || indice.Metric != IndexModelMetric.Cosine)
-{
-    Error($"El índice existe con dimensión {indice.Dimension} y métrica {indice.Metric}; se esperaba {opciones.Dimension}/cosine.");
-    return 1;
-}
-
-var embeddings = new GeneradorEmbeddingsOpenAI(opciones, claves);
+var embeddings = new GeneradorEmbeddingsPinecone(opciones, claves);
 var cliente = pinecone.Index(opciones.Index);
 var total = 0;
 foreach (var lote in corpus.Fragmentos.Chunk(Lote))
 {
-    // Se embebe el nombre de la norma junto con el texto del artículo.
-    var vectores = await embeddings.GenerarAsync(lote.Select(f => $"{f.Norma}\n{f.Texto}").ToList(), CancellationToken.None);
+    // Se embebe el nombre de la norma junto con el texto del artículo (input_type = passage).
+    var textos = lote.Select(f => f.Norma + "\n" + f.Texto).ToList();
+    var vectores = await embeddings.GenerarAsync(textos, TipoEntrada.Pasaje, CancellationToken.None);
     await cliente.UpsertAsync(new UpsertRequest
     {
         Namespace = ns,
@@ -103,5 +115,26 @@ foreach (var lote in corpus.Fragmentos.Chunk(Lote))
     total += lote.Length;
 }
 
+// La búsqueda serverless es eventualmente consistente: se espera a ver todos los vectores en el namespace.
+for (var intento = 0; intento < 30; intento++)
+{
+    var stats = await cliente.DescribeIndexStatsAsync(new DescribeIndexStatsRequest());
+    if (stats.Namespaces is { } n && n.TryGetValue(ns, out var resumen) && resumen.VectorCount >= total)
+        break;
+    await Task.Delay(TimeSpan.FromSeconds(2));
+}
+
 Console.WriteLine($"Indexados {total} fragmentos en {opciones.Index}/{ns} con {opciones.EmbeddingModel}.");
 return 0;
+
+async Task<Pinecone.Index?> DescribirAsync()
+{
+    try
+    {
+        return await pinecone.DescribeIndexAsync(opciones.Index);
+    }
+    catch (NotFoundError)
+    {
+        return null;
+    }
+}

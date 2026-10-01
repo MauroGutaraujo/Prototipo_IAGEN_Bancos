@@ -25,7 +25,7 @@ builder.Services.PostConfigure<RagOptions>(o =>
     if (builder.Configuration["PINECONE_INDEX"] is { Length: > 0 } indice)
         o.Index = indice;
 });
-builder.Services.AddRag(builder.Configuration["PINECONE_API_KEY"], builder.Configuration["EMBEDDING_API_KEY"]);
+builder.Services.AddRag(builder.Configuration["PINECONE_API_KEY"]);
 
 // Agentes simbólicos con los parámetros de la tesis (sección "Guardrail").
 // GuardrailSalida exige Guardrail:PlazoRespuesta: falla al resolverse si no está configurado.
