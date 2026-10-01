@@ -71,12 +71,17 @@ Precisiones (aprobadas por el estudiante, 2026-09-30/10-01):
 
 ### 2.4 Recuperación normativa CRAG
 
-- Consulta = plantilla con intención + ruta + regla aplicada.
-- Embeddings: un único modelo fijo (definir en config; p. ej. `text-embedding-3-small`, dimensión 1536). El índice Pinecone debe tener la misma dimensión, métrica `cosine`.
-- `topK = 5`. Conservar fragmentos con `score ≥ 0.78`.
-- Si ninguno ≥ 0.78 ⇒ reformular 1 vez (agregar nombre de norma + términos de la tipología) ⇒ si sigue sin ninguno ⇒ Derivar (estado `Derivado`, motivo `CRAG_INCORRECTA`).
-- Registrar: scores, ids de fragmentos, calificación (Correcta/Ambigua/Incorrecta), `t_RAG`.
-- Flag de ablación `Rag:Enabled=false`: no se consulta Pinecone y el generador recibe solo hechos (condición T2 de la tesis). En ablación **el guardrail de salida se ejecuta pero no bloquea** (se registra su veredicto para medir TA).
+- **Corpus:** `knowledge/fragmentos.jsonl` (versionado, SHA-256 en `knowledge/manifest.json`), un fragmento por artículo con id estable `<norma>-art-<n>`. Las normas oficiales se extraen **literalmente** de los PDF publicados por la fuente oficial (URL y SHA-256 fijados en `tools/knowledge/fragmentar.py`); la política interna PIR-2026-V1 es **simulada** y está declarada como tal. Selección: Res. SBS N.° 04036-2022 (Reglamento, arts. 1–19); Ley N.° 29571 (arts. 18, 19, 24, 81–96 incl. 90-A, 150–152); Ley N.° 31435 (artículo único).
+- **Embeddings:** OpenAI `text-embedding-3-small` (1536 dimensiones), el mismo modelo para indexar y consultar. Se embebe «nombre de la norma + texto del artículo»; la consulta se embebe tal cual. Índice Pinecone serverless, métrica `cosine`, dimensión 1536. Los vectores de cada versión del corpus van en el namespace `corpus-<12 primeros caracteres del SHA-256>`, de modo que una consulta nunca mezcla versiones.
+- **Consulta** (plantilla `consulta.v1`) = intención + ruta + regla aplicada. Como solo 4 combinaciones llegan a redacción (C1-R5, C1-R6, C2-R9, C3-R7), la recuperación es la misma para todos los casos de una combinación.
+- `topK = 5`. Se admiten los fragmentos con `score ≥ θ` (θ = 0.78; el valor igual a θ se admite).
+- **Calificación CRAG:**
+  - **Correcta:** ≥ 1 fragmento admitido en la primera consulta.
+  - **Ambigua:** ninguno en la primera; ≥ 1 tras **una** reformulación (se agregan los nombres de las normas y términos de la tipología).
+  - **Incorrecta:** ninguno tras reformular ⇒ Derivar (estado `Derivado`, motivo `CRAG_INCORRECTA`).
+  - **Omitida:** ablación T2 (`Rag:Enabled=false`): no se consulta Pinecone y el generador recibe solo hechos. En ablación **el guardrail de salida se ejecuta pero no bloquea** (se registra su veredicto para medir TA).
+- **θ se revisa antes de congelarse** con consultas de DESARROLLO redactadas aparte (nunca casos de evaluación). Si 0.78 no separa fragmentos pertinentes de no pertinentes con este modelo, se informa al estudiante con la evidencia; el valor no se cambia sin su decisión (es parámetro de la tesis).
+- Registrar en `app.Recuperacion`: calificación y `FragmentosJson` = `[{id, score, admitido, consulta}]` de cada consulta realizada; además `t_RAG` en `Ejecucion` y la versión del corpus.
 
 ### 2.5 Agente Generativo (LLM)
 

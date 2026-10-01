@@ -28,6 +28,7 @@ jobs:
           dotnet test --solution Reclamos.sln --no-build --report-trx
           --results-directory "${{ github.workspace }}/TestResults"
           --filter-not-trait "Categoria=Integracion" --filter-not-trait "Categoria=AjusteOcr"
+          --filter-not-trait "Categoria=IntegracionRag"
 
       - name: Publicar pruebas fallidas como anotaciones
         if: failure()
@@ -129,6 +130,67 @@ jobs:
         with:
           name: ocr
           path: TestResults
+
+  rag:
+    name: RAG (Pinecone + embeddings)
+    runs-on: ubuntu-24.04
+    env:
+      PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+      EMBEDDING_API_KEY: ${{ secrets.EMBEDDING_API_KEY }}
+      RAG_REPORTES_DIR: ${{ github.workspace }}/TestResults/rag
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: |
+          dotnet build src/Reclamos.Indexador
+          dotnet build tests/Reclamos.Infrastructure.Tests
+
+      # La indexación modifica Pinecone: solo con [indexar] en el mensaje del commit.
+      - name: Indexar corpus normativo
+        if: contains(github.event.head_commit.message, '[indexar]')
+        run: dotnet run --project src/Reclamos.Indexador --no-build
+
+      - name: Integración RAG (3 consultas, reporta sin umbrales)
+        run: >
+          dotnet test --project tests/Reclamos.Infrastructure.Tests --no-build --report-trx
+          --results-directory "${{ github.workspace }}/TestResults" --filter-trait "Categoria=IntegracionRag"
+
+      - name: Publicar reportes como anotaciones
+        if: always()
+        run: |
+          if [ -f TestResults/rag/rag_integracion.csv ]; then
+            python3 .github/scripts/csv_anotacion.py TestResults/rag/rag_integracion.csv "RAG integración - 3 consultas"
+          fi
+          python3 .github/scripts/trx_anotaciones.py TestResults
+
+  knowledge:
+    name: Corpus normativo (reproducibilidad)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: tools/knowledge
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Dependencias
+        run: pip install -r requirements.txt
+
+      # Si un portal oficial no responde desde el runner, la prueba de reproducción se omite (no falla).
+      - name: Descargar PDF oficiales (SHA-256 fijado)
+        continue-on-error: true
+        run: python fragmentar.py --descargar
+
+      - name: Tests (incluye regenerar el corpus y comparar su SHA-256)
+        run: python -m pytest -q -rs
 
   python:
     name: Python (generador del banco)

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Reclamos.Application.Agentes;
+using Reclamos.Application.Rag;
 using Reclamos.Guardrails;
 using Reclamos.Guardrails.Legal;
 using Reclamos.Guardrails.Salida;
@@ -18,6 +19,13 @@ var connectionString = builder.Configuration.GetConnectionString("Reclamos")
 builder.Services.AddInfrastructure(connectionString);
 builder.Services.Configure<OcrOptions>(builder.Configuration.GetSection(OcrOptions.Seccion));
 builder.Services.AddOcr();
+builder.Services.Configure<RagOptions>(builder.Configuration.GetSection(RagOptions.Seccion));
+builder.Services.PostConfigure<RagOptions>(o =>
+{
+    if (builder.Configuration["PINECONE_INDEX"] is { Length: > 0 } indice)
+        o.Index = indice;
+});
+builder.Services.AddRag(builder.Configuration["PINECONE_API_KEY"], builder.Configuration["EMBEDDING_API_KEY"]);
 
 // Agentes simbólicos con los parámetros de la tesis (sección "Guardrail").
 // GuardrailSalida exige Guardrail:PlazoRespuesta: falla al resolverse si no está configurado.
@@ -29,7 +37,6 @@ builder.Services.AddSingleton<IOutputGuardrail>(sp =>
 
 var app = builder.Build();
 
-// Pinecone se agrega a /health en H5.
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     ResponseWriter = (context, report) => context.Response.WriteAsJsonAsync(new
