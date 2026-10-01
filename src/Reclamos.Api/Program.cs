@@ -5,6 +5,7 @@ using Reclamos.Guardrails;
 using Reclamos.Guardrails.Legal;
 using Reclamos.Guardrails.Salida;
 using Reclamos.Infrastructure;
+using Reclamos.Infrastructure.Ocr;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,8 @@ var connectionString = builder.Configuration.GetConnectionString("Reclamos")
         "Falta la cadena de conexión: define SQL_CONN o ConnectionStrings:Reclamos (user-secrets).");
 
 builder.Services.AddInfrastructure(connectionString);
+builder.Services.Configure<OcrOptions>(builder.Configuration.GetSection(OcrOptions.Seccion));
+builder.Services.AddOcr();
 
 // Agentes simbólicos con los parámetros de la tesis (sección "Guardrail").
 // GuardrailSalida exige Guardrail:PlazoRespuesta: falla al resolverse si no está configurado.
@@ -26,7 +29,7 @@ builder.Services.AddSingleton<IOutputGuardrail>(sp =>
 
 var app = builder.Build();
 
-// Pinecone y Tesseract se agregan a /health en H4/H5.
+// Pinecone se agrega a /health en H5.
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     ResponseWriter = (context, report) => context.Response.WriteAsJsonAsync(new

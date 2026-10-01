@@ -18,15 +18,20 @@ Recibido → OcrExtraido → Clasificado → Decidido ─┬─ (derivar) ──
 
 ### 2.1 Agente OCR (neuronal determinista + validación simbólica)
 
-- Entrada: ruta del JPG. Preprocesamiento: escala de grises, deskew simple, binarización (ImageSharp u OpenCvSharp; elegir uno y fijar versión).
-- Ejecuta `tesseract <img> stdout -l spa --psm 6 tsv` y parsea el TSV (columna `conf` 0–100 por palabra; ignorar `-1`).
-- Extrae con regex:
-  - Monto: `(S\/|US\$)\s?\d{1,3}(,\d{3})*(\.\d{2})`
-  - Fecha/hora: `dd/mm/aaaa` y `hh:mm` (tolerar `dd-mm-aaaa`)
-  - Código de operación: definir patrón según las plantillas del generador (p. ej. `\b[A-Z0-9]{8,12}\b` precedido de "Operación"/"Cód.").
-- Confianza del campo `c_f` = media de `conf/100` de las palabras que forman el valor.
+- Entrada: ruta del JPG. Preprocesamiento con **SixLabors.ImageSharp 3.1.12**: escala opcional, enderezado simple (búsqueda del ángulo que maximiza el perfil de proyección horizontal en ±`AnguloMaximo`), escala de grises y binarización (ninguna, umbral fijo o adaptativa). Parámetros en `Ocr:Preprocesamiento`.
+- **Los parámetros del preprocesamiento se eligen solo con un banco de desarrollo generado con otra semilla (`--seed 7`)**; el banco de evaluación (`--seed 2026`) nunca se usa para ajustar.
+- Motor: Tesseract 5 (paquete de Ubuntu 24.04; la versión exacta se registra en cada corrida). Modelo `spa.traineddata` de **tessdata_fast**, commit `923915d4ced2a7235221788285785a29c4a42d4a`, SHA-256 `6f2e04d02774a18f01bed44b1111f2cd7f3ba7ac9dc4373cd3f898a40ea6b464` (se verifica y se registra).
+- Ejecuta `tesseract stdin stdout -l spa --psm 6 --tessdata-dir <dir> tsv` (imagen preprocesada en PNG por la entrada estándar) y parsea el TSV (columna `conf` 0–100 por palabra; ignorar `-1`).
+- Extrae con regex por línea de texto:
+  - Monto: `(S\/|US\$)\s?\d{1,3}(,\d{3})*(\.\d{2})`; la moneda sale del símbolo.
+  - Fecha: `dd/mm/aaaa` o `dd-mm-aaaa` (fecha de calendario válida). **Obligatoria.**
+  - Hora: `hh:mm`. **Opcional**: si falta, `fechaHora` queda a las 00:00 (R2 compara por día).
+  - Código de operación: `[A-Z0-9]{8,12}` precedido de «Operación» o «Cód. operación» (con o sin tilde y dos puntos). **Sin corrección de caracteres**: solo mayúsculas y sin espacios.
+  - Si un patrón aparece varias veces, se toma la primera aparición en orden de lectura.
+- Confianza del campo `c_f` = media de `conf/100` de las palabras que forman el valor (para la fecha: palabras de la fecha y de la hora, si existe), **redondeada a 3 decimales (half away from zero) antes de comparar**; así coincide con lo que se guarda en `DECIMAL(4,3)`.
 - Campo válido ⇔ cumple regex **y** `c_f ≥ 0.90`.
-- Salida: `{ monto, moneda, fechaHora, codigo, conf: {monto, fecha, codigo}, valido: bool }`.
+- Si la imagen no se puede leer o Tesseract falla o excede el tiempo, los campos quedan nulos (R1 deriva) y se registra el error.
+- Salida: `{ monto, moneda, fechaHora, codigo, conf: {monto, fecha, codigo} }` + TSV crudo + versión de Tesseract + SHA-256 del modelo.
 
 ### 2.2 Clasificador de intención (LLM, salida JSON)
 

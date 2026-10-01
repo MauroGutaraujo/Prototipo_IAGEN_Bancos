@@ -4,10 +4,15 @@ on:
   push:
   pull_request:
 
+env:
+  # spa.traineddata fijado (SPEC §2.1): tessdata_fast, commit y SHA-256.
+  TESSDATA_URL: https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/923915d4ced2a7235221788285785a29c4a42d4a/spa.traineddata
+  TESSDATA_SHA256: 6f2e04d02774a18f01bed44b1111f2cd7f3ba7ac9dc4373cd3f898a40ea6b464
+
 jobs:
   dotnet:
     name: .NET (build, tests y cobertura)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
 
@@ -18,8 +23,11 @@ jobs:
       - name: Build
         run: dotnet build Reclamos.sln
 
-      - name: Tests
-        run: dotnet test --solution Reclamos.sln --no-build --report-trx --results-directory "${{ github.workspace }}/TestResults"
+      - name: Tests (sin integración)
+        run: >
+          dotnet test --solution Reclamos.sln --no-build --report-trx
+          --results-directory "${{ github.workspace }}/TestResults"
+          --filter-not-trait "Categoria=Integracion" --filter-not-trait "Categoria=AjusteOcr"
 
       - name: Publicar pruebas fallidas como anotaciones
         if: failure()
@@ -40,9 +48,77 @@ jobs:
           name: cobertura
           path: TestResults
 
+  ocr:
+    name: OCR (integración con Tesseract)
+    runs-on: ubuntu-24.04
+    env:
+      TESSDATA_DIR: ${{ github.workspace }}/.tessdata
+      OCR_REPORTES_DIR: ${{ github.workspace }}/TestResults/ocr
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Tesseract y modelo fijado
+        run: |
+          sudo apt-get update && sudo apt-get install -y tesseract-ocr unixodbc
+          tesseract --version
+          mkdir -p "$TESSDATA_DIR"
+          curl -sSfL -o "$TESSDATA_DIR/spa.traineddata" "$TESSDATA_URL"
+          echo "$TESSDATA_SHA256  $TESSDATA_DIR/spa.traineddata" | sha256sum -c -
+
+      - name: Dependencias del generador
+        working-directory: tools/dataset-generator
+        run: pip install -r requirements.txt
+
+      # Una corrida de ajuste ([ajuste-ocr]) usa SOLO el banco de desarrollo: el de evaluación no se toca.
+      - name: Banco de evaluación (seed 2026)
+        if: ${{ !contains(github.event.head_commit.message, '[ajuste-ocr]') }}
+        working-directory: tools/dataset-generator
+        run: python generate.py --seed 2026 --out data/
+
+      - name: Banco de desarrollo (seed 7, solo para ajuste)
+        if: contains(github.event.head_commit.message, '[ajuste-ocr]')
+        working-directory: tools/dataset-generator
+        run: python generate.py --seed 7 --out data-dev/
+
+      - name: Build
+        run: dotnet build tests/Reclamos.Infrastructure.Tests
+
+      - name: Integración OCR (10 vouchers, reporta sin umbrales)
+        if: ${{ !contains(github.event.head_commit.message, '[ajuste-ocr]') }}
+        run: >
+          dotnet test --project tests/Reclamos.Infrastructure.Tests --no-build --report-trx
+          --results-directory "${{ github.workspace }}/TestResults" --filter-trait "Categoria=Integracion"
+
+      - name: Ajuste del preprocesamiento (banco de desarrollo)
+        if: contains(github.event.head_commit.message, '[ajuste-ocr]')
+        run: >
+          dotnet test --project tests/Reclamos.Infrastructure.Tests --no-build --report-trx
+          --results-directory "${{ github.workspace }}/TestResults" --filter-trait "Categoria=AjusteOcr"
+
+      - name: Publicar reportes como anotaciones
+        if: always()
+        run: |
+          python3 .github/scripts/csv_anotacion.py TestResults/ocr/ocr_integracion.csv "OCR integración (seed 2026, 10 vouchers)"
+          python3 .github/scripts/csv_anotacion.py TestResults/ocr/ocr_ajuste_dev.csv "Ajuste OCR (banco de desarrollo seed 7)"
+          python3 .github/scripts/trx_anotaciones.py TestResults
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ocr
+          path: TestResults
+
   python:
     name: Python (generador del banco)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: tools/dataset-generator

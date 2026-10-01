@@ -13,3 +13,4 @@ knowledge/raw/*.pdf
 *.log
 .pytest_cache/
 TestResults/
+tools/dataset-generator/data-dev/
