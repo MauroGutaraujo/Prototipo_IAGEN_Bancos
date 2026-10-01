@@ -11,3 +11,5 @@ tools/dataset-generator/data/
 tools/analysis/out/
 knowledge/raw/*.pdf
 *.log
+.pytest_cache/
+TestResults/

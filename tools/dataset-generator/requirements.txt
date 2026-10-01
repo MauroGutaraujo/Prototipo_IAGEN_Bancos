@@ -1,5 +1,5 @@
-numpy
-pillow
-pandas
-pyodbc
-# Tras instalar, fijar versiones con: pip freeze > requirements.lock.txt
+# Versiones fijadas: el hash del banco depende de numpy y Pillow (codificador JPEG).
+numpy==2.5.3
+pillow==12.3.0
+pyodbc==5.3.0
+pytest==9.1.1
