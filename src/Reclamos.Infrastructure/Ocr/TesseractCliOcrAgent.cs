@@ -11,7 +11,7 @@ using SixLabors.ImageSharp.PixelFormats;
 namespace Reclamos.Infrastructure.Ocr;
 
 /// <summary>
-/// Agente OCR sobre la CLI de Tesseract: <c>tesseract stdin stdout -l spa --psm 6 --tessdata-dir &lt;dir&gt; tsv</c>.
+/// Agente OCR sobre la CLI de Tesseract: <c>tesseract stdin stdout -l spa --psm 6 --tessdata-dir &lt;dir&gt; -c tessedit_create_tsv=1</c>.
 /// Ante cualquier falla devuelve campos nulos (R1 deriva) y el motivo en <see cref="LecturaOcr.Error"/>.
 /// </summary>
 public sealed class TesseractCliOcrAgent : IOcrAgent
@@ -55,11 +55,15 @@ public sealed class TesseractCliOcrAgent : IOcrAgent
                 "-l", _opciones.Idioma,
                 "--psm", _opciones.Psm.ToString(CultureInfo.InvariantCulture),
                 "--tessdata-dir", _opciones.TessdataDir,
-                "tsv",
+                // Variable en lugar del config "tsv": ese archivo vive en <tessdata>/configs y
+                // la carpeta del modelo fijado no lo trae.
+                "-c", "tessedit_create_tsv=1",
             ];
             var (codigo, salida, error) = await EjecutarAsync(args, png, ct);
             if (codigo != 0)
                 return new LecturaOcr(Vacio, salida, $"tesseract terminó con código {codigo}: {error.Trim()}", motor);
+            if (!salida.StartsWith("level\t", StringComparison.Ordinal))
+                return new LecturaOcr(Vacio, salida, $"La salida de tesseract no es TSV: {error.Trim()}", motor);
 
             return new LecturaOcr(ExtractorCampos.Extraer(TsvTesseract.Parsear(salida)), salida, null, motor);
         }

@@ -21,7 +21,7 @@ Recibido → OcrExtraido → Clasificado → Decidido ─┬─ (derivar) ──
 - Entrada: ruta del JPG. Preprocesamiento con **SixLabors.ImageSharp 3.1.12**: escala opcional, enderezado simple (búsqueda del ángulo que maximiza el perfil de proyección horizontal en ±`AnguloMaximo`), escala de grises y binarización (ninguna, umbral fijo o adaptativa). Parámetros en `Ocr:Preprocesamiento`.
 - **Los parámetros del preprocesamiento se eligen solo con un banco de desarrollo generado con otra semilla (`--seed 7`)**; el banco de evaluación (`--seed 2026`) nunca se usa para ajustar.
 - Motor: Tesseract 5 (paquete de Ubuntu 24.04; la versión exacta se registra en cada corrida). Modelo `spa.traineddata` de **tessdata_fast**, commit `923915d4ced2a7235221788285785a29c4a42d4a`, SHA-256 `6f2e04d02774a18f01bed44b1111f2cd7f3ba7ac9dc4373cd3f898a40ea6b464` (se verifica y se registra).
-- Ejecuta `tesseract stdin stdout -l spa --psm 6 --tessdata-dir <dir> tsv` (imagen preprocesada en PNG por la entrada estándar) y parsea el TSV (columna `conf` 0–100 por palabra; ignorar `-1`).
+- Ejecuta `tesseract stdin stdout -l spa --psm 6 --tessdata-dir <dir> -c tessedit_create_tsv=1` (imagen preprocesada en PNG por la entrada estándar) y parsea el TSV (columna `conf` 0–100 por palabra; ignorar `-1`).
 - Extrae con regex por línea de texto:
   - Monto: `(S\/|US\$)\s?\d{1,3}(,\d{3})*(\.\d{2})`; la moneda sale del símbolo.
   - Fecha: `dd/mm/aaaa` o `dd-mm-aaaa` (fecha de calendario válida). **Obligatoria.**

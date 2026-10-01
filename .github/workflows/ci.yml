@@ -92,8 +92,8 @@ jobs:
         if: contains(github.event.head_commit.message, '[ajuste-ocr]')
         run: |
           img=tools/dataset-generator/data-dev/vouchers/0001.jpg
-          tesseract "$img" stdout -l spa --psm 6 --tessdata-dir "$TESSDATA_DIR" tsv > diag_archivo.txt 2>&1 || true
-          tesseract stdin stdout -l spa --psm 6 --tessdata-dir "$TESSDATA_DIR" tsv < "$img" > diag_stdin.txt 2>&1 || true
+          tesseract "$img" stdout -l spa --psm 6 --tessdata-dir "$TESSDATA_DIR" -c tessedit_create_tsv=1 > diag_archivo.txt 2>&1 || true
+          tesseract stdin stdout -l spa --psm 6 --tessdata-dir "$TESSDATA_DIR" -c tessedit_create_tsv=1 < "$img" > diag_stdin.txt 2>&1 || true
           head -12 diag_archivo.txt > a.txt; head -12 diag_stdin.txt > b.txt
           python3 .github/scripts/csv_anotacion.py a.txt "Tesseract con archivo"
           python3 .github/scripts/csv_anotacion.py b.txt "Tesseract con stdin"
