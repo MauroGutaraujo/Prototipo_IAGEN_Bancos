@@ -161,21 +161,18 @@ jobs:
           for s in PINECONE_API_KEY GEMINI_API_KEY; do
             if [ -n "${!s}" ]; then estado="$estado $s=configurada"; else estado="$estado $s=FALTA"; ok=false; fi
           done
-          echo "::notice title=Secrets E2E::$estado"
+          echo "::notice title=Secrets E2E::$estado (sin ambas claves solo se omiten las llamadas al LLM)"
           echo "ok=$ok" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-dotnet@v6
-        if: steps.secretos.outputs.ok == 'true'
         with:
           global-json-file: global.json
 
       - uses: actions/setup-python@v7
-        if: steps.secretos.outputs.ok == 'true'
         with:
           python-version: "3.12"
 
       - name: Tesseract, modelo fijado y driver ODBC
-        if: steps.secretos.outputs.ok == 'true'
         run: |
           sudo apt-get update && sudo apt-get install -y tesseract-ocr unixodbc
           mkdir -p "$Ocr__TessdataDir"
@@ -188,14 +185,12 @@ jobs:
           fi
 
       - name: Migraciones (y verificación de que el snapshot coincide con el modelo)
-        if: steps.secretos.outputs.ok == 'true'
         run: |
           dotnet tool restore
           dotnet ef database update -p src/Reclamos.Infrastructure -s src/Reclamos.Infrastructure
           dotnet ef migrations has-pending-model-changes -p src/Reclamos.Infrastructure -s src/Reclamos.Infrastructure
 
       - name: Banco de evaluación (seed 2026) cargado en SQL Server
-        if: steps.secretos.outputs.ok == 'true'
         working-directory: tools/dataset-generator
         run: |
           pip install -r requirements.txt
@@ -203,7 +198,6 @@ jobs:
           python load.py --data data/
 
       - name: Levantar la API
-        if: steps.secretos.outputs.ok == 'true'
         run: |
           dotnet build src/Reclamos.Api
           nohup dotnet run --project src/Reclamos.Api --no-build --no-launch-profile --urls http://localhost:8080 > api.log 2>&1 &
@@ -216,7 +210,7 @@ jobs:
         run: python3 .github/scripts/e2e.py "$MODELO_DEV" "$Banco__DirectorioDatos"
 
       - name: Log de la API si algo falló
-        if: failure() && steps.secretos.outputs.ok == 'true'
+        if: failure()
         run: |
           tail -n 40 api.log > api_tail.txt || true
           python3 .github/scripts/csv_anotacion.py api_tail.txt "Últimas líneas de la API"
