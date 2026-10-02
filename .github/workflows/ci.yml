@@ -187,6 +187,7 @@ jobs:
       - name: Migraciones (y verificación de que el snapshot coincide con el modelo)
         run: |
           dotnet tool restore
+          dotnet build src/Reclamos.Infrastructure
           dotnet ef database update -p src/Reclamos.Infrastructure -s src/Reclamos.Infrastructure
           dotnet ef migrations has-pending-model-changes -p src/Reclamos.Infrastructure -s src/Reclamos.Infrastructure
 
