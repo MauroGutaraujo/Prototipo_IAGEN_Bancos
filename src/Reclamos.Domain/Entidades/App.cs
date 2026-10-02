@@ -70,6 +70,9 @@ public class Ejecucion
 
     public byte Regeneraciones { get; set; }
 
+    /// <summary>R1–R4, R7, R8, CRAG_INCORRECTA, GUARDRAIL_SALIDA o ERROR; null si se emitió.</summary>
+    public string? MotivoDerivacion { get; set; }
+
     public CorridaBenchmark? Corrida { get; set; }
     public Expediente? Expediente { get; set; }
     public ICollection<TransicionEstado> Transiciones { get; set; } = [];

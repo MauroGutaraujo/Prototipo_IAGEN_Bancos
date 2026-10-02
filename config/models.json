@@ -1,0 +1,14 @@
+{
+  "_nota": "Registro de modelos (SPEC §4). Sin claves: cada modelo lee la suya de la variable indicada en apiKeyEnv. Los 8 modelos del benchmark se agregan en H8, verificando nombre y endpoint en la documentación vigente.",
+  "modelos": [
+    {
+      "id": "gemini-3.5-flash-lite",
+      "proveedor": "Google (AI Studio, plan gratuito)",
+      "segmento": "desarrollo",
+      "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/",
+      "apiKeyEnv": "GEMINI_API_KEY",
+      "modelName": "gemini-3.5-flash-lite"
+    }
+  ],
+  "parametros": { "temperature": 0, "maxTokensClasificacion": 200, "maxTokensGeneracion": 600 }
+}

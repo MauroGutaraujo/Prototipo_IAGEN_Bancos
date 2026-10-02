@@ -76,13 +76,13 @@ public static class PlantillasConsulta
 /// </summary>
 public sealed class RecuperadorCrag(RagOptions opciones, IBuscadorVectorial buscador) : INormativeRetriever
 {
-    public async Task<ResultadoRecuperacion> RecuperarAsync(ConsultaNormativa consulta, CancellationToken ct)
+    public async Task<ResultadoRecuperacion> RecuperarAsync(ConsultaNormativa consulta, bool ablacion, CancellationToken ct)
     {
         if (consulta.Ruta == Ruta.Derivar)
             throw new ArgumentException("Un expediente derivado no llega a recuperación.", nameof(consulta));
 
         var inicio = Stopwatch.GetTimestamp();
-        if (!opciones.Enabled)
+        if (ablacion || !opciones.Enabled)
             return Resultado(CalificacionRecuperacion.Omitida, [], [], inicio);
 
         var evaluados = new List<FragmentoEvaluado>();

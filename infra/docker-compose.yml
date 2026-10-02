@@ -17,12 +17,17 @@ services:
       timeout: 5s
       retries: 10
 
-  # Se habilita en el hito H6, cuando exista src/Reclamos.Api/Dockerfile
-  # api:
-  #   build: { context: .., dockerfile: src/Reclamos.Api/Dockerfile }
-  #   env_file: ../.env
-  #   depends_on: { sqlserver: { condition: service_healthy } }
-  #   ports: ["8080:8080"]
+  # API (H6): Tesseract y el modelo spa verificado por SHA-256 dentro de la imagen.
+  # Las claves (PINECONE_API_KEY, GEMINI_API_KEY) se leen de ../.env; los vouchers se montan de solo lectura.
+  api:
+    build: { context: .., dockerfile: src/Reclamos.Api/Dockerfile }
+    env_file: ../.env
+    environment:
+      SQL_CONN: "Server=sqlserver,1433;Database=ReclamosTesis;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+    volumes:
+      - ../tools/dataset-generator/data:/datos:ro
+    depends_on: { sqlserver: { condition: service_healthy } }
+    ports: ["8080:8080"]
 
 volumes:
   sqldata:

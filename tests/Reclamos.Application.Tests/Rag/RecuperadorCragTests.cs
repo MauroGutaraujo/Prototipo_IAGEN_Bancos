@@ -32,7 +32,7 @@ public class RecuperadorCragTests
     {
         var buscador = new BuscadorFalso([0.91, 0.78, 0.7799]);
 
-        var r = await Recuperador(buscador).RecuperarAsync(C1Procedente, TestContext.Current.CancellationToken);
+        var r = await Recuperador(buscador).RecuperarAsync(C1Procedente, false, TestContext.Current.CancellationToken);
 
         Assert.Equal(CalificacionRecuperacion.Correcta, r.Calificacion);
         Assert.Equal(["f1-0", "f1-1"], r.Admitidos.Select(f => f.Id)); // 0.78 exacto se admite
@@ -47,7 +47,7 @@ public class RecuperadorCragTests
     {
         var buscador = new BuscadorFalso([0.6, 0.5], [0.82, 0.4]);
 
-        var r = await Recuperador(buscador).RecuperarAsync(C1Procedente, TestContext.Current.CancellationToken);
+        var r = await Recuperador(buscador).RecuperarAsync(C1Procedente, false, TestContext.Current.CancellationToken);
 
         Assert.Equal(CalificacionRecuperacion.Ambigua, r.Calificacion);
         Assert.Equal(["f2-0"], r.Admitidos.Select(f => f.Id));
@@ -65,7 +65,7 @@ public class RecuperadorCragTests
     {
         var buscador = new BuscadorFalso([0.5], [0.77]);
 
-        var r = await Recuperador(buscador).RecuperarAsync(C1Procedente, TestContext.Current.CancellationToken);
+        var r = await Recuperador(buscador).RecuperarAsync(C1Procedente, false, TestContext.Current.CancellationToken);
 
         Assert.Equal(CalificacionRecuperacion.Incorrecta, r.Calificacion);
         Assert.Empty(r.Admitidos);
@@ -78,7 +78,7 @@ public class RecuperadorCragTests
     {
         var buscador = new BuscadorFalso();
 
-        var r = await Recuperador(buscador, habilitado: false).RecuperarAsync(C1Procedente, TestContext.Current.CancellationToken);
+        var r = await Recuperador(buscador, habilitado: false).RecuperarAsync(C1Procedente, false, TestContext.Current.CancellationToken);
 
         Assert.Equal(CalificacionRecuperacion.Omitida, r.Calificacion);
         Assert.Empty(buscador.Llamadas);
@@ -89,11 +89,22 @@ public class RecuperadorCragTests
     }
 
     [Fact]
+    public async Task Condicion_T2_no_consulta_aunque_RAG_este_habilitado()
+    {
+        var buscador = new BuscadorFalso();
+
+        var r = await Recuperador(buscador).RecuperarAsync(C1Procedente, true, TestContext.Current.CancellationToken);
+
+        Assert.Equal(CalificacionRecuperacion.Omitida, r.Calificacion);
+        Assert.Empty(buscador.Llamadas);
+    }
+
+    [Fact]
     public async Task FragmentosJson_registra_cada_consulta_con_score_y_admision()
     {
         var buscador = new BuscadorFalso([0.5], [0.9]);
 
-        var r = await Recuperador(buscador).RecuperarAsync(C1Procedente, TestContext.Current.CancellationToken);
+        var r = await Recuperador(buscador).RecuperarAsync(C1Procedente, false, TestContext.Current.CancellationToken);
 
         var json = JsonDocument.Parse(r.FragmentosJson).RootElement;
         Assert.Equal(2, json.GetArrayLength());
@@ -124,13 +135,13 @@ public class RecuperadorCragTests
     {
         var r = Recuperador(new BuscadorFalso());
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            r.RecuperarAsync(new ConsultaNormativa(Intencion.C1, Ruta.Derivar, "R3"), TestContext.Current.CancellationToken));
+            r.RecuperarAsync(new ConsultaNormativa(Intencion.C1, Ruta.Derivar, "R3"), false, TestContext.Current.CancellationToken));
     }
 
     [Fact]
     public async Task Mide_el_tiempo_de_recuperacion()
     {
-        var r = await Recuperador(new BuscadorFalso([0.9])).RecuperarAsync(C1Procedente, TestContext.Current.CancellationToken);
+        var r = await Recuperador(new BuscadorFalso([0.9])).RecuperarAsync(C1Procedente, false, TestContext.Current.CancellationToken);
         Assert.True(r.Duracion >= TimeSpan.Zero);
     }
 

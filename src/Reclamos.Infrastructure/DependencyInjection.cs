@@ -2,6 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Reclamos.Application.Agentes;
+using Reclamos.Application.Llm;
+using Reclamos.Application.Orquestacion;
+using Reclamos.Guardrails;
+using Reclamos.Infrastructure.Llm;
 using Reclamos.Application.Rag;
 using Reclamos.Infrastructure.Rag;
 using Reclamos.Infrastructure.Ocr;
@@ -51,6 +55,38 @@ public static class DependencyInjection
         services.AddSingleton<INormativeRetriever>(sp =>
             new RecuperadorCrag(sp.GetRequiredService<IOptions<RagOptions>>().Value, sp.GetRequiredService<IBuscadorVectorial>()));
         services.AddHealthChecks().AddCheck<PineconeHealthCheck>("pinecone");
+        return services;
+    }
+
+    /// <summary>
+    /// Clasificador, generador (Semantic Kernel) y orquestador. Las opciones <see cref="LlmOptions"/>,
+    /// <see cref="BancoOptions"/> y <see cref="GuardrailOptions"/> se enlazan en la API.
+    /// </summary>
+    public static IServiceCollection AddOrquestacion(this IServiceCollection services, string directorioPrompts = "prompts")
+    {
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton(sp => RegistroModelos.Desde(File.ReadAllText(
+            Rutas.ResolverArchivo(sp.GetRequiredService<IOptions<LlmOptions>>().Value.RegistroPath))));
+        services.AddSingleton(_ => new RepositorioPrompts(Rutas.ResolverDirectorio(directorioPrompts)));
+        services.AddSingleton<IClienteLlm>(sp => new ClienteLlmSemanticKernel(
+            sp.GetRequiredService<RegistroModelos>(), sp.GetRequiredService<IOptions<LlmOptions>>().Value));
+        services.AddSingleton<IIntentClassifier>(sp =>
+        {
+            var prompts = sp.GetRequiredService<RepositorioPrompts>();
+            return new ClasificadorIntencion(sp.GetRequiredService<IClienteLlm>(), prompts.Cargar("clasificador.v1"),
+                prompts.LeerTexto("clasificador.schema.json"), sp.GetRequiredService<RegistroModelos>().Parametros);
+        });
+        services.AddSingleton<IResolutionGenerator>(sp =>
+        {
+            var prompts = sp.GetRequiredService<RepositorioPrompts>();
+            return new GeneradorResolucion(sp.GetRequiredService<IClienteLlm>(), prompts.Cargar("generador.v2"),
+                prompts.Cargar("regeneracion.v1"), sp.GetRequiredService<RegistroModelos>().Parametros,
+                sp.GetRequiredService<IOptions<GuardrailOptions>>().Value.PlazoRespuesta);
+        });
+        services.AddScoped<IFuenteExpedientes>(sp =>
+            new FuenteExpedientesEf(sp.GetRequiredService<ReclamosDbContext>(), sp.GetRequiredService<IOptions<BancoOptions>>().Value));
+        services.AddScoped<IAlmacenEjecuciones, AlmacenEjecucionesEf>();
+        services.AddScoped<OrquestadorExpedientes>();
         return services;
     }
 }

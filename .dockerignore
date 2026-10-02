@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/.venv/
+**/TestResults/
+.git/
+.vs/
+.vscode/
+.env
+tools/dataset-generator/data/
+tools/dataset-generator/data-dev/
+knowledge/raw/*.pdf

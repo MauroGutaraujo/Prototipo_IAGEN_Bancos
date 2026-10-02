@@ -53,7 +53,7 @@ public class RagIntegracionTests
         var csv = new StringBuilder("combinacion,calificacion,consulta,id,score,admitido\n");
         foreach (var consulta in Consultas)
         {
-            var r = await crag.RecuperarAsync(consulta, ct);
+            var r = await crag.RecuperarAsync(consulta, false, ct);
             Assert.NotEmpty(r.Evaluados); // funcional: Pinecone respondió; los scores solo se reportan
             foreach (var f in r.Evaluados)
             {

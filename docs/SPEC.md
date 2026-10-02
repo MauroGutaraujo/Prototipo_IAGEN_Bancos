@@ -13,6 +13,10 @@ Recibido → OcrExtraido → Clasificado → Decidido ─┬─ (derivar) ──
 - Cada transición se persiste en `TransicionEstado` con marca de tiempo UTC y milisegundos.
 - Etapas estrictamente secuenciales: OCR → Clasificación → Agente Legal → CRAG → Generación → Guardrail de salida.
 - Si una etapa lanza excepción: estado `Error`, se registra, el expediente cuenta como derivado en métricas.
+- **Motivo de derivación** (`Ejecucion.MotivoDerivacion`): la regla del Agente Legal que derivó (`R1`–`R4`, `R7`, `R8`), `CRAG_INCORRECTA`, `GUARDRAIL_SALIDA` o `ERROR`; nulo si se emite.
+- **Orquestación:** el orquestador carga los hechos del expediente (narración, voucher, transacción y movimientos del cliente, tipo de cambio, dispositivo registrado) desde los esquemas `core` y `app`; **nunca** lee `eval`. Las filas de auditoría se persisten al final, fuera de los tiempos medidos.
+- **Tiempos** (`Stopwatch` por etapa, ms): `t_OCR`; `L_CLS` (incluye el reintento si lo hubo); `t_Guardrail` = Agente Legal + guardrail de salida (todas sus evaluaciones); `t_RAG`; `L_GEN` (incluye la regeneración); `L_Total` de inicio a fin del pipeline; `t_orq = L_Total − (t_OCR + L_CLS + t_Guardrail + t_RAG + L_GEN)` (carga de hechos y control).
+- `PromptVersion` = `clasificador.v1+generador.v2+regeneracion.v1+consulta.v1`.
 
 ## 2. Componentes
 
@@ -40,7 +44,9 @@ Recibido → OcrExtraido → Clasificado → Decidido ─┬─ (derivar) ──
 
 - Prompt: `prompts/clasificador.v1.md`. Esquema: `prompts/clasificador.schema.json`.
 - Salida esperada: `{ "intencion": "C1|C2|C3|FUERA_DE_CATALOGO", "monto": number|null, "moneda": "PEN|USD"|null, "fecha": "YYYY-MM-DD"|null, "codigo": string|null }`.
-- Validación en C#: si el JSON no parsea o no cumple el esquema ⇒ 1 reintento; si vuelve a fallar ⇒ regla R4 (derivar).
+- Validación en C#: si el JSON no parsea o no cumple el esquema ⇒ 1 reintento; si vuelve a fallar ⇒ regla R4 (derivar). Validador: JsonSchema.Net (draft 2020-12).
+- La llamada pide `response_format = json_object`, temperatura 0 y `max_tokens` = `maxTokensClasificacion`. Sin reintentos automáticos de transporte (`Llm:ReintentosTransporte = 0`): una falla HTTP o de tiempo deja la ejecución en `Error`.
+- Se registran `ModeloVersion` (campo `model` de la respuesta) y los tokens de entrada y salida (suma de los intentos).
 
 ### 2.3 Agente Legal (simbólico, sin LLM) — `Reclamos.Guardrails`
 
@@ -92,6 +98,9 @@ Precisiones (aprobadas por el estudiante, 2026-09-30/10-01):
 - Prompt: `prompts/generador.v2.md` (v1 se conserva sin cambios). Entradas: ruta y regla decididas, hechos verificados (número de reclamo, monto, fecha, código, comercio, estado), **plazo aplicable** (`Guardrail:PlazoRespuesta`) y fragmentos admitidos con su id.
 - Formatos de los hechos: monto `S/ 1,234.50` o `US$ 45.00`; fecha `dd/mm/aaaa`; código tal cual el core.
 - Debe citar normas solo por el id de fragmento recibido (formato `[F:<id>]`).
+- Plantillas renderizadas por un renderizador propio mínimo (`{{variable}}` y `{{#fragmentos}}…{{/fragmentos}}`); las secciones `# SISTEMA` y `# USUARIO` van como mensajes separados. Temperatura 0, `max_tokens` = `maxTokensGeneracion`.
+- **Regeneración** (solo T1, una vez como máximo): se reenvía la conversación con el borrador fallido y el mensaje correctivo fijo `prompts/regeneracion.v1.md`, que lista las fallas del guardrail. Si el segundo borrador también falla ⇒ Derivar (`GUARDRAIL_SALIDA`).
+- **TA** se cuenta sobre el **primer** borrador (comparable entre T1 y T2; en T2 no hay regeneración porque el guardrail no bloquea).
 
 ### 2.6 Guardrail de salida (simbólico)
 

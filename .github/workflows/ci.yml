@@ -131,6 +131,96 @@ jobs:
           name: ocr
           path: TestResults
 
+  e2e:
+    name: Punta a punta (API + SQL Server + OCR + RAG + LLM)
+    runs-on: ubuntu-24.04
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: Ci-${{ github.run_id }}-Aa1!
+        ports: ["1433:1433"]
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1'"
+          --health-interval 10s --health-timeout 5s --health-retries 20
+    env:
+      SQL_CONN: Server=localhost,1433;Database=ReclamosTesis;User Id=sa;Password=Ci-${{ github.run_id }}-Aa1!;TrustServerCertificate=True
+      PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      Ocr__TessdataDir: ${{ github.workspace }}/.tessdata
+      Banco__DirectorioDatos: ${{ github.workspace }}/tools/dataset-generator/data
+      MODELO_DEV: gemini-3.5-flash-lite
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Estado de los secrets (solo si existen, nunca su valor)
+        id: secretos
+        run: |
+          ok=true; estado=""
+          for s in PINECONE_API_KEY GEMINI_API_KEY; do
+            if [ -n "${!s}" ]; then estado="$estado $s=configurada"; else estado="$estado $s=FALTA"; ok=false; fi
+          done
+          echo "::notice title=Secrets E2E::$estado"
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-dotnet@v6
+        if: steps.secretos.outputs.ok == 'true'
+        with:
+          global-json-file: global.json
+
+      - uses: actions/setup-python@v7
+        if: steps.secretos.outputs.ok == 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Tesseract, modelo fijado y driver ODBC
+        if: steps.secretos.outputs.ok == 'true'
+        run: |
+          sudo apt-get update && sudo apt-get install -y tesseract-ocr unixodbc
+          mkdir -p "$Ocr__TessdataDir"
+          curl -sSfL -o "$Ocr__TessdataDir/spa.traineddata" "$TESSDATA_URL"
+          echo "$TESSDATA_SHA256  $Ocr__TessdataDir/spa.traineddata" | sha256sum -c -
+          if ! odbcinst -q -d | grep -q "ODBC Driver 18"; then
+            curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null
+            curl -sSL https://packages.microsoft.com/config/ubuntu/24.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
+            sudo apt-get update && sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
+          fi
+
+      - name: Migraciones (y verificación de que el snapshot coincide con el modelo)
+        if: steps.secretos.outputs.ok == 'true'
+        run: |
+          dotnet tool restore
+          dotnet ef database update -p src/Reclamos.Infrastructure -s src/Reclamos.Infrastructure
+          dotnet ef migrations has-pending-model-changes -p src/Reclamos.Infrastructure -s src/Reclamos.Infrastructure
+
+      - name: Banco de evaluación (seed 2026) cargado en SQL Server
+        if: steps.secretos.outputs.ok == 'true'
+        working-directory: tools/dataset-generator
+        run: |
+          pip install -r requirements.txt
+          python generate.py --seed 2026 --out data/
+          python load.py --data data/
+
+      - name: Levantar la API
+        if: steps.secretos.outputs.ok == 'true'
+        run: |
+          dotnet build src/Reclamos.Api
+          nohup dotnet run --project src/Reclamos.Api --no-build --no-launch-profile --urls http://localhost:8080 > api.log 2>&1 &
+          for i in $(seq 1 60); do curl -s -o /dev/null http://localhost:8080/health && break; sleep 2; done
+          curl -s http://localhost:8080/health > health.json; cat health.json
+          python3 .github/scripts/csv_anotacion.py health.json "Health de la API"
+
+      - name: Un caso por tipología (reporta sin umbrales)
+        if: steps.secretos.outputs.ok == 'true'
+        run: python3 .github/scripts/e2e.py "$MODELO_DEV" "$Banco__DirectorioDatos"
+
+      - name: Log de la API si algo falló
+        if: failure() && steps.secretos.outputs.ok == 'true'
+        run: |
+          tail -n 40 api.log > api_tail.txt || true
+          python3 .github/scripts/csv_anotacion.py api_tail.txt "Últimas líneas de la API"
+
   rag:
     name: RAG (Pinecone Inference + búsqueda)
     runs-on: ubuntu-24.04

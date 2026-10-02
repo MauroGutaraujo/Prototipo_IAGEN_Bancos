@@ -49,5 +49,6 @@ public interface IBuscadorVectorial
 /// <summary>Recuperación normativa con control CRAG (SPEC §2.4).</summary>
 public interface INormativeRetriever
 {
-    Task<ResultadoRecuperacion> RecuperarAsync(ConsultaNormativa consulta, CancellationToken ct);
+    /// <param name="ablacion">Condición T2: no se consulta Pinecone (Omitida), igual que con Rag:Enabled=false.</param>
+    Task<ResultadoRecuperacion> RecuperarAsync(ConsultaNormativa consulta, bool ablacion, CancellationToken ct);
 }

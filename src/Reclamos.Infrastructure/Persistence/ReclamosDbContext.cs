@@ -119,6 +119,7 @@ public class ReclamosDbContext(DbContextOptions<ReclamosDbContext> options) : Db
             e.Property(x => x.ConfFecha).HasPrecision(4, 3);
             e.Property(x => x.ConfCodigo).HasPrecision(4, 3);
             e.Property(x => x.Regeneraciones).HasDefaultValue((byte)0);
+            e.Property(x => x.MotivoDerivacion).HasMaxLength(40);
             e.HasOne(x => x.Corrida).WithMany().HasForeignKey(x => x.IdCorrida);
             e.HasOne(x => x.Expediente).WithMany().HasForeignKey(x => x.IdExpediente);
             e.HasMany(x => x.Transiciones).WithOne().HasForeignKey(x => x.IdEjecucion);

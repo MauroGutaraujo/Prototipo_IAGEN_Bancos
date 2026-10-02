@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Reclamos.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using Reclamos.Infrastructure.Persistence;
 namespace Reclamos.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ReclamosDbContext))]
-    partial class ReclamosDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261001120000_MotivoDerivacion")]
+    partial class MotivoDerivacion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
