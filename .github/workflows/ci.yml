@@ -202,9 +202,14 @@ jobs:
         run: |
           dotnet build src/Reclamos.Api
           nohup dotnet run --project src/Reclamos.Api --no-build --no-launch-profile --urls http://localhost:8080 > api.log 2>&1 &
-          for i in $(seq 1 60); do curl -s -o /dev/null http://localhost:8080/health && break; sleep 2; done
-          curl -s http://localhost:8080/health > health.json; cat health.json
-          python3 .github/scripts/csv_anotacion.py health.json "Health de la API"
+          codigo=000
+          for i in $(seq 1 60); do
+            codigo=$(curl -s -o health.json -w "%{http_code}" http://localhost:8080/health || true)
+            [ "$codigo" != "000" ] && break
+            sleep 2
+          done
+          if [ "$codigo" = "000" ]; then echo "::error title=API::La API no respondió en /health"; exit 1; fi
+          python3 .github/scripts/csv_anotacion.py health.json "Health de la API (HTTP $codigo)"
 
       - name: Un caso por tipología (reporta sin umbrales)
         if: steps.secretos.outputs.ok == 'true'
