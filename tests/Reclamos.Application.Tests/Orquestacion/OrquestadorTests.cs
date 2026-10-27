@@ -236,6 +236,13 @@ public class OrquestadorTests
     }
 
     [Fact]
+    public void PromptVersion_cabe_en_su_columna()
+    {
+        // app.Ejecucion.PromptVersion es NVARCHAR(80): un valor más largo hace fallar el guardado en SQL Server.
+        Assert.InRange(OrquestadorExpedientes.VersionPrompts.Length, 1, 80);
+    }
+
+    [Fact]
     public void Las_fallas_del_guardrail_se_describen_para_el_mensaje_correctivo()
     {
         Assert.Contains("[F:x]", OrquestadorExpedientes.Describir(new FallaGuardrail(TipoFalla.CitaNoAdmitida, "x")));

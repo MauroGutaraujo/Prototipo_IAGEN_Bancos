@@ -51,7 +51,7 @@ CREATE TABLE app.Ejecucion (
   Condicion CHAR(2) NOT NULL,           -- T1 | T2
   ModeloId NVARCHAR(60) NOT NULL,
   ModeloVersion NVARCHAR(120) NULL,
-  PromptVersion NVARCHAR(40) NOT NULL,
+  PromptVersion NVARCHAR(80) NOT NULL,
   Repeticion TINYINT NOT NULL,
   InicioUtc DATETIME2(3) NOT NULL,
   FinUtc DATETIME2(3) NOT NULL,
@@ -62,7 +62,8 @@ CREATE TABLE app.Ejecucion (
   IntencionPredicha NVARCHAR(20) NULL,
   MontoExtraido DECIMAL(12,2) NULL, FechaExtraida DATETIME2 NULL, CodigoExtraido NVARCHAR(20) NULL,
   ConfMonto DECIMAL(4,3) NULL, ConfFecha DECIMAL(4,3) NULL, ConfCodigo DECIMAL(4,3) NULL,
-  Regeneraciones TINYINT NOT NULL DEFAULT 0
+  Regeneraciones TINYINT NOT NULL DEFAULT 0,
+  MotivoDerivacion NVARCHAR(40) NULL      -- R1–R4, R7, R8, CRAG_INCORRECTA, GUARDRAIL_SALIDA, ERROR
 );
 CREATE TABLE app.TransicionEstado (
   IdTransicion BIGINT IDENTITY PRIMARY KEY,

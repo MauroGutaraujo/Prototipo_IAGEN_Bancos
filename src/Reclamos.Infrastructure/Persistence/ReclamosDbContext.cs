@@ -108,7 +108,7 @@ public class ReclamosDbContext(DbContextOptions<ReclamosDbContext> options) : Db
             e.Property(x => x.Condicion).HasConversion<string>().HasColumnType("char(2)");
             e.Property(x => x.ModeloId).HasMaxLength(60);
             e.Property(x => x.ModeloVersion).HasMaxLength(120);
-            e.Property(x => x.PromptVersion).HasMaxLength(40);
+            e.Property(x => x.PromptVersion).HasMaxLength(80);
             e.Property(x => x.InicioUtc).HasPrecision(3);
             e.Property(x => x.FinUtc).HasPrecision(3);
             e.Property(x => x.EstadoFinal).HasConversion<string>().HasMaxLength(20);

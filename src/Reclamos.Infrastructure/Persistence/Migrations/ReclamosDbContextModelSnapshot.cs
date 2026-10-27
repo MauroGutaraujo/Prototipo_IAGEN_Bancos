@@ -179,8 +179,8 @@ namespace Reclamos.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("PromptVersion")
                         .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
 
                     b.Property<byte>("Regeneraciones")
                         .ValueGeneratedOnAdd()
