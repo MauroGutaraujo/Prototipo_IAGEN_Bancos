@@ -1,0 +1,4 @@
+# Archivos cuyo SHA-256 está fijado: siempre con fin de línea LF (en Windows core.autocrlf los convertiría a CRLF).
+knowledge/fragmentos.jsonl text eol=lf
+knowledge/manifest.json text eol=lf
+tools/dataset-generator/asignacion/*.csv text eol=lf
