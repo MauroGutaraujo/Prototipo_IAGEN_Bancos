@@ -227,6 +227,20 @@ jobs:
           tail -n 40 api.log > api_tail.txt || true
           python3 .github/scripts/csv_anotacion.py api_tail.txt "Últimas líneas de la API"
 
+  docker:
+    name: Imagen Docker de la API
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Construir la imagen (Tesseract y modelo spa verificado)
+        run: docker build -f src/Reclamos.Api/Dockerfile -t reclamos-api:ci .
+
+      - name: La imagen trae Tesseract y el modelo fijado
+        run: |
+          docker run --rm --entrypoint tesseract reclamos-api:ci --version | head -1
+          docker run --rm --entrypoint sh reclamos-api:ci -c "sha256sum /opt/tessdata/spa.traineddata && ls /app/wwwroot/ficha /app/prompts /app/config /app/knowledge"
+
   rag:
     name: RAG (Pinecone Inference + búsqueda)
     runs-on: ubuntu-24.04

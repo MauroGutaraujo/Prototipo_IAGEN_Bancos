@@ -33,3 +33,32 @@ Kit de arranque para desarrollar el prototipo con **Google Antigravity**.
 - Pinecone (plan gratuito alcanza para la normativa).
 - Proveedor de embeddings (el que definan en `Rag:EmbeddingModel`).
 - OpenAI, Anthropic, Google AI Studio, Mistral y un proveedor de inferencia para Llama 4 Maverick (solo para el benchmark).
+
+## Probar el sistema en tu PC con Docker Desktop
+
+En el equipo de desarrollo Smart App Control bloquea los binarios .NET recién compilados, así que el sistema se corre en contenedores Linux (SQL Server + API con Tesseract).
+
+1. En `.env` (copia de `.env.example`) completa al menos:
+   - `MSSQL_SA_PASSWORD` y `SQL_CONN` (la misma contraseña; `SQL_CONN` apunta a `localhost,1433`).
+   - `Ficha__Pines__A1`, `Ficha__Pines__A2`, `Ficha__Pines__A3` (PIN de cada analista).
+   - Opcional para procesar expedientes: `PINECONE_API_KEY` y `GEMINI_API_KEY`.
+2. Genera el banco sintético (antes de levantar los contenedores, para que la API vea los vouchers):
+   ```
+   cd tools/dataset-generator
+   .venv\Scriptsctivate
+   python generate.py --seed 2026 --out data/
+   cd ../..
+   ```
+3. Levanta SQL Server y la API (la API crea las tablas al arrancar con `Db__AplicarMigraciones=true`):
+   ```
+   docker compose -f infra/docker-compose.yml --env-file .env up -d --build
+   ```
+   Espera a que `http://localhost:8080/health` responda.
+4. Carga el banco y la asignación T0 en SQL Server:
+   ```
+   cd tools/dataset-generator
+   python load.py --data data/
+   ```
+5. Abre `http://localhost:8080/ficha/` e ingresa con un código de analista y su PIN.
+
+`load.py` se niega a recargar si ya hay ejecuciones o registros de la ficha. Para empezar de cero (borra la base del contenedor): `docker compose -f infra/docker-compose.yml down -v`.

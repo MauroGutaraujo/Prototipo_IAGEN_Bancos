@@ -58,6 +58,14 @@ builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Ad
 
 var app = builder.Build();
 
+// Solo para el entorno Docker local (docker-compose): crea o actualiza la base al arrancar.
+// En el equipo del estudiante `dotnet ef` no corre (Smart App Control); en CI las migraciones se aplican aparte.
+if (app.Configuration.GetValue<bool>("Db:AplicarMigraciones"))
+{
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<ReclamosDbContext>().Database.MigrateAsync();
+}
+
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseAuthentication();
