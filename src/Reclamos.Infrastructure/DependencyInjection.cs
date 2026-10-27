@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Reclamos.Application.Ficha;
 using Microsoft.Extensions.Options;
 using Reclamos.Application.Agentes;
 using Reclamos.Application.Llm;
@@ -64,7 +66,7 @@ public static class DependencyInjection
     /// </summary>
     public static IServiceCollection AddOrquestacion(this IServiceCollection services, string directorioPrompts = "prompts")
     {
-        services.AddSingleton(TimeProvider.System);
+        services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton(sp => RegistroModelos.Desde(File.ReadAllText(
             Rutas.ResolverArchivo(sp.GetRequiredService<IOptions<LlmOptions>>().Value.RegistroPath))));
         services.AddSingleton(_ => new RepositorioPrompts(Rutas.ResolverDirectorio(directorioPrompts)));
@@ -87,6 +89,18 @@ public static class DependencyInjection
             new FuenteExpedientesEf(sp.GetRequiredService<ReclamosDbContext>(), sp.GetRequiredService<IOptions<BancoOptions>>().Value));
         services.AddScoped<IAlmacenEjecuciones, AlmacenEjecucionesEf>();
         services.AddScoped<OrquestadorExpedientes>();
+        return services;
+    }
+
+    /// <summary>Ficha de cronometraje T0. Las opciones <see cref="FichaOptions"/> se enlazan en la API.</summary>
+    public static IServiceCollection AddFicha(this IServiceCollection services)
+    {
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddScoped<IAlmacenFicha>(sp =>
+            new AlmacenFichaEf(sp.GetRequiredService<ReclamosDbContext>(), sp.GetRequiredService<IOptions<BancoOptions>>().Value));
+        services.AddScoped(sp => new ServicioFicha(
+            sp.GetRequiredService<IAlmacenFicha>(), sp.GetRequiredService<IOptions<FichaOptions>>().Value,
+            sp.GetRequiredService<TimeProvider>()));
         return services;
     }
 }

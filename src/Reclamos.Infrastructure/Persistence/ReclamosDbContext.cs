@@ -26,6 +26,8 @@ public class ReclamosDbContext(DbContextOptions<ReclamosDbContext> options) : Db
     public DbSet<Recuperacion> Recuperaciones => Set<Recuperacion>();
     public DbSet<Resolucion> Resoluciones => Set<Resolucion>();
     public DbSet<RegistroManual> RegistrosManuales => Set<RegistroManual>();
+    public DbSet<AsignacionManual> AsignacionesManuales => Set<AsignacionManual>();
+    public DbSet<SesionManual> SesionesManuales => Set<SesionManual>();
 
     // eval: VerdadReferencia se mapea solo para que la migración cree la tabla.
     // A propósito no se expone como DbSet: la aplicación no la lee en tiempo de ejecución.
@@ -170,6 +172,29 @@ public class ReclamosDbContext(DbContextOptions<ReclamosDbContext> options) : Db
             e.Property(x => x.Monto).HasPrecision(12, 2);
             e.Property(x => x.Codigo).HasMaxLength(20);
             e.Property(x => x.Ruta).HasConversion<string>().HasMaxLength(15);
+            e.HasOne(x => x.Expediente).WithMany().HasForeignKey(x => x.IdExpediente);
+        });
+
+        b.Entity<AsignacionManual>(e =>
+        {
+            e.ToTable("AsignacionManual", SchemaApp);
+            e.HasKey(x => x.IdAsignacion);
+            e.Property(x => x.CodigoAnalista).HasColumnType("char(2)");
+            e.HasIndex(x => new { x.CodigoAnalista, x.IdExpediente }).IsUnique();
+            e.HasIndex(x => new { x.CodigoAnalista, x.Orden }).IsUnique();
+            e.HasOne(x => x.Expediente).WithMany().HasForeignKey(x => x.IdExpediente);
+        });
+
+        b.Entity<SesionManual>(e =>
+        {
+            e.ToTable("SesionManual", SchemaApp);
+            e.HasKey(x => x.IdSesion);
+            e.Property(x => x.CodigoAnalista).HasColumnType("char(2)");
+            e.Property(x => x.TIngresoUtc).HasPrecision(3);
+            e.Property(x => x.UltimoLatidoUtc).HasPrecision(3);
+            e.Property(x => x.PausaInicioUtc).HasPrecision(3);
+            e.Property(x => x.TFinalUtc).HasPrecision(3);
+            e.HasIndex(x => new { x.CodigoAnalista, x.IdExpediente }).IsUnique();
             e.HasOne(x => x.Expediente).WithMany().HasForeignKey(x => x.IdExpediente);
         });
     }

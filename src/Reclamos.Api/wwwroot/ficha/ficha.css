@@ -1,0 +1,40 @@
+:root {
+  --fondo: #f5f6f8;
+  --tarjeta: #ffffff;
+  --texto: #1f2328;
+  --suave: #59636e;
+  --borde: #d0d7de;
+  --acento: #0b5cad;
+  --error: #b42318;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --fondo: #0f1115; --tarjeta: #181b21; --texto: #e6e8eb; --suave: #a3aab3; --borde: #2d333b; --acento: #5ca8ff; --error: #ff8a80; }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: var(--fondo); color: var(--texto); }
+header { display: flex; gap: 1rem; align-items: center; padding: .75rem 1rem; border-bottom: 1px solid var(--borde); background: var(--tarjeta); }
+header h1 { font-size: 1.1rem; margin: 0; flex: 1; }
+main { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+.tarjeta { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 8px; padding: 1rem; }
+.rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; }
+.ancho { grid-column: 1 / -1; }
+.barra { display: flex; gap: .5rem; align-items: center; margin-bottom: 1rem; }
+.barra h2 { flex: 1; margin: 0; }
+label { display: block; margin: .5rem 0; color: var(--suave); }
+input, select, textarea { display: block; width: 100%; margin-top: .25rem; padding: .5rem; font: inherit; color: var(--texto);
+  background: var(--fondo); border: 1px solid var(--borde); border-radius: 6px; }
+#form-respuesta { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 1rem; }
+button { padding: .5rem 1rem; font: inherit; border: 0; border-radius: 6px; background: var(--acento); color: #fff; cursor: pointer; }
+button.secundario { background: transparent; color: var(--acento); border: 1px solid var(--acento); }
+button.enlace { background: none; color: var(--acento); padding: 0; text-decoration: underline; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+#voucher { max-width: 100%; border: 1px solid var(--borde); border-radius: 6px; }
+#lista li { margin: .25rem 0; }
+.error { color: var(--error); min-height: 1.5em; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th, td { text-align: left; padding: .25rem; border-bottom: 1px solid var(--borde); }
+#velo-pausa { position: fixed; inset: 0; display: grid; place-content: center; gap: 1rem; text-align: center;
+  background: var(--fondo); font-size: 1.2rem; }
+#politica { white-space: pre-wrap; font-size: .9rem; max-height: 300px; overflow: auto; }

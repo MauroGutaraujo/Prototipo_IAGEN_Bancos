@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ficha de cronometraje T0</title>
+  <link rel="stylesheet" href="ficha.css">
+</head>
+<body>
+  <header>
+    <h1>Ficha de cronometraje T0</h1>
+    <span id="sesion" hidden></span>
+    <button id="salir" type="button" hidden>Salir</button>
+  </header>
+
+  <main>
+    <section id="vista-login" class="tarjeta">
+      <h2>Ingreso del analista</h2>
+      <form id="form-login">
+        <label>Código de analista
+          <select name="codigo" required>
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="A3">A3</option>
+          </select>
+        </label>
+        <label>PIN <input name="pin" type="password" autocomplete="current-password" required></label>
+        <button type="submit">Ingresar</button>
+        <p class="error" id="error-login" role="alert"></p>
+      </form>
+    </section>
+
+    <section id="vista-lista" class="tarjeta" hidden>
+      <h2>Mis casos</h2>
+      <p>Atiende los casos en el orden de la lista. Solo el siguiente caso está habilitado.</p>
+      <p id="progreso"></p>
+      <ol id="lista"></ol>
+    </section>
+
+    <section id="vista-caso" hidden>
+      <div class="barra">
+        <h2 id="titulo-caso"></h2>
+        <button id="pausa" type="button">Pausa</button>
+        <button id="volver" type="button" class="secundario">Volver a la lista</button>
+      </div>
+
+      <div id="contenido-caso" class="rejilla">
+        <article class="tarjeta">
+          <h3>Narración del cliente</h3>
+          <p id="narracion"></p>
+          <h3>Voucher</h3>
+          <img id="voucher" alt="Voucher adjunto por el cliente">
+        </article>
+
+        <article class="tarjeta">
+          <h3>Buscar transacción en el core</h3>
+          <form id="form-core">
+            <label>Código de operación <input name="codigo" required></label>
+            <button type="submit">Buscar</button>
+          </form>
+          <div id="resultado-core"></div>
+
+          <h3>Normativa</h3>
+          <ul>
+            <li><a href="https://intranet2.sbs.gob.pe/dv_int_cn/2230/v1.0/Adjuntos/4036-2022.r.pdf" target="_blank" rel="noopener">Res. SBS N.° 04036-2022 (Reglamento de Gestión de Reclamos y Requerimientos)</a></li>
+            <li><a href="https://www.gob.pe/institucion/indecopi/normas-legales/1244218-29571" target="_blank" rel="noopener">Ley N.° 29571, Código de Protección y Defensa del Consumidor</a></li>
+            <li><a href="https://leyes.congreso.gob.pe/Documentos/2021_2026/ADLP/Texto_Consolidado/31435-TXM.pdf" target="_blank" rel="noopener">Ley N.° 31435</a></li>
+            <li><button id="ver-politica" type="button" class="enlace">Política interna del banco (simulada)</button></li>
+          </ul>
+          <div id="politica" hidden></div>
+        </article>
+
+        <article class="tarjeta ancho">
+          <h3>Respuesta del analista</h3>
+          <form id="form-respuesta">
+            <label>Intención
+              <select name="intencion" required>
+                <option value="">Selecciona…</option>
+                <option value="C1">C1 · Cobro duplicado</option>
+                <option value="C2">C2 · Operación no reconocida</option>
+                <option value="C3">C3 · Caída de pasarela / operación no completada</option>
+                <option value="FueraDeCatalogo">Fuera de catálogo</option>
+              </select>
+            </label>
+            <label>Monto <input name="monto" type="number" step="0.01" min="0"></label>
+            <label>Fecha de la operación <input name="fecha" type="date"></label>
+            <label>Código de operación <input name="codigo"></label>
+            <label>Ruta
+              <select name="ruta" required>
+                <option value="">Selecciona…</option>
+                <option value="Procedente">Procedente</option>
+                <option value="Improcedente">Improcedente</option>
+                <option value="Derivar">Derivar</option>
+              </select>
+            </label>
+            <label class="ancho">Texto de respuesta al cliente
+              <textarea name="textoRespuesta" rows="8"></textarea>
+            </label>
+            <button type="submit">Enviar respuesta</button>
+            <p class="error" id="error-caso" role="alert"></p>
+          </form>
+        </article>
+      </div>
+
+      <div id="velo-pausa" hidden>
+        <p>En pausa. El caso está oculto y el tiempo no corre.</p>
+        <button id="reanudar" type="button">Reanudar</button>
+      </div>
+    </section>
+  </main>
+  <script src="ficha.js"></script>
+</body>
+</html>

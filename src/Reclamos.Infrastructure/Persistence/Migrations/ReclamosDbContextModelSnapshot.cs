@@ -22,6 +22,40 @@ namespace Reclamos.Infrastructure.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Reclamos.Domain.Entidades.AsignacionManual", b =>
+                {
+                    b.Property<int>("IdAsignacion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdAsignacion"));
+
+                    b.Property<string>("CodigoAnalista")
+                        .IsRequired()
+                        .HasColumnType("char(2)");
+
+                    b.Property<bool>("EsCalibracion")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("IdExpediente")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("int");
+
+                    b.HasKey("IdAsignacion");
+
+                    b.HasIndex("IdExpediente");
+
+                    b.HasIndex("CodigoAnalista", "IdExpediente")
+                        .IsUnique();
+
+                    b.HasIndex("CodigoAnalista", "Orden")
+                        .IsUnique();
+
+                    b.ToTable("AsignacionManual", "app");
+                });
+
             modelBuilder.Entity("Reclamos.Domain.Entidades.ClienteSintetico", b =>
                 {
                     b.Property<int>("IdCliente")
@@ -376,6 +410,56 @@ namespace Reclamos.Infrastructure.Persistence.Migrations
                     b.ToTable("Resolucion", "app");
                 });
 
+            modelBuilder.Entity("Reclamos.Domain.Entidades.SesionManual", b =>
+                {
+                    b.Property<int>("IdSesion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdSesion"));
+
+                    b.Property<string>("CodigoAnalista")
+                        .IsRequired()
+                        .HasColumnType("char(2)");
+
+                    b.Property<int>("IdExpediente")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("IdRegistro")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Interrupciones")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PausaInicioUtc")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime2(3)");
+
+                    b.Property<int>("PausasMs")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("TFinalUtc")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime2(3)");
+
+                    b.Property<DateTime>("TIngresoUtc")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime2(3)");
+
+                    b.Property<DateTime>("UltimoLatidoUtc")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime2(3)");
+
+                    b.HasKey("IdSesion");
+
+                    b.HasIndex("IdExpediente");
+
+                    b.HasIndex("CodigoAnalista", "IdExpediente")
+                        .IsUnique();
+
+                    b.ToTable("SesionManual", "app");
+                });
+
             modelBuilder.Entity("Reclamos.Domain.Entidades.TipoCambio", b =>
                 {
                     b.Property<DateOnly>("Fecha")
@@ -508,6 +592,28 @@ namespace Reclamos.Infrastructure.Persistence.Migrations
                     b.HasKey("IdExpediente");
 
                     b.ToTable("VerdadReferencia", "eval");
+                });
+
+            modelBuilder.Entity("Reclamos.Domain.Entidades.AsignacionManual", b =>
+                {
+                    b.HasOne("Reclamos.Domain.Entidades.Expediente", "Expediente")
+                        .WithMany()
+                        .HasForeignKey("IdExpediente")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Expediente");
+                });
+
+            modelBuilder.Entity("Reclamos.Domain.Entidades.SesionManual", b =>
+                {
+                    b.HasOne("Reclamos.Domain.Entidades.Expediente", "Expediente")
+                        .WithMany()
+                        .HasForeignKey("IdExpediente")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Expediente");
                 });
 
             modelBuilder.Entity("Reclamos.Domain.Entidades.DecisionLegal", b =>

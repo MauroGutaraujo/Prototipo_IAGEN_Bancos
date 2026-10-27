@@ -82,16 +82,16 @@ def nulo(s: str) -> str | None:
     return s or None
 
 
-def cargar(cn: pyodbc.Connection, data: Path) -> None:
+def cargar(cn: pyodbc.Connection, data: Path, asignacion: Path | None = None) -> None:
     cur = cn.cursor()
     cur.fast_executemany = True
 
-    for tabla in ("app.Ejecucion", "app.RegistroManual"):
+    for tabla in ("app.Ejecucion", "app.RegistroManual", "app.SesionManual"):
         n = cur.execute(f"SELECT COUNT(*) FROM {tabla}").fetchone()[0]
         if n:
             raise SystemExit(f"{tabla} tiene {n} filas: no se recarga el banco sobre datos experimentales.")
 
-    for tabla in ("eval.VerdadReferencia", "app.Evidencia", "app.Expediente",
+    for tabla in ("eval.VerdadReferencia", "app.AsignacionManual", "app.Evidencia", "app.Expediente",
                   "core.Transaccion", "core.ClienteSintetico", "core.TipoCambio"):
         cur.execute(f"DELETE FROM {tabla}")
 
@@ -131,11 +131,19 @@ def cargar(cn: pyodbc.Connection, data: Path) -> None:
           fh(r["fecha_real"]), r["codigo_real"], r["campos_legibles"], r["ruta_correcta"], r["regla_esperada"])
          for r in filas(data, "verdad_referencia.csv")])
 
+    if asignacion is not None:
+        # Asignación T0 generada offline (asignar_t0.py); no incluye la clase del caso.
+        with asignacion.open(encoding="utf-8", newline="") as f:
+            cur.executemany(
+                "INSERT INTO app.AsignacionManual (CodigoAnalista, IdExpediente, Orden, EsCalibracion) VALUES (?, ?, ?, ?)",
+                [(r["codigo_analista"], int(r["id_expediente"]), int(r["orden"]), r["es_calibracion"] == "1")
+                 for r in csv.DictReader(f)])
+
 
 def resumen(cn: pyodbc.Connection) -> None:
     cur = cn.cursor()
     for tabla in ("core.ClienteSintetico", "core.TipoCambio", "core.Transaccion",
-                  "app.Expediente", "app.Evidencia", "eval.VerdadReferencia"):
+                  "app.Expediente", "app.Evidencia", "app.AsignacionManual", "eval.VerdadReferencia"):
         print(f"  {tabla:<24} {cur.execute(f'SELECT COUNT(*) FROM {tabla}').fetchone()[0]}")
     print("  Intención × ruta correcta (eval.VerdadReferencia):")
     for fila in cur.execute("SELECT IntencionReal, RutaCorrecta, COUNT(*) FROM eval.VerdadReferencia"
@@ -147,6 +155,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--conn", help="cadena ADO.NET u ODBC; por defecto SQL_CONN (entorno o .env)")
     ap.add_argument("--data", type=Path, default=Path("data"))
+    ap.add_argument("--asignacion", type=Path, default=Path("asignacion/asignacion_t0.csv"),
+                    help="asignación T0 (asignar_t0.py); se omite si el archivo no existe")
     args = ap.parse_args()
 
     conn = args.conn or leer_conn_de_env()
@@ -158,7 +168,7 @@ def main() -> int:
 
     with pyodbc.connect(a_odbc(conn), autocommit=False) as cn:
         try:
-            cargar(cn, args.data)
+            cargar(cn, args.data, args.asignacion if args.asignacion.exists() else None)
             cn.commit()
         except BaseException:
             cn.rollback()

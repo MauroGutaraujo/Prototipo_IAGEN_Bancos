@@ -137,3 +137,37 @@ public class RegistroManual
 
     public Expediente? Expediente { get; set; }
 }
+
+/// <summary>Asignación T0 generada offline (tools/dataset-generator/asignar_t0.py); no incluye la clase del caso.</summary>
+public class AsignacionManual
+{
+    public int IdAsignacion { get; set; }
+    /// <summary>A1 | A2 | A3.</summary>
+    public required string CodigoAnalista { get; set; }
+    public int IdExpediente { get; set; }
+    /// <summary>Posición 1–80 en la lista del analista.</summary>
+    public int Orden { get; set; }
+    public bool EsCalibracion { get; set; }
+
+    public Expediente? Expediente { get; set; }
+}
+
+/// <summary>Caso abierto en la ficha: tiempos medidos en el servidor hasta que se envía (SPEC §5).</summary>
+public class SesionManual
+{
+    public int IdSesion { get; set; }
+    public required string CodigoAnalista { get; set; }
+    public int IdExpediente { get; set; }
+    public DateTime TIngresoUtc { get; set; }
+    public DateTime UltimoLatidoUtc { get; set; }
+    /// <summary>Inicio de la pausa en curso; null si no está en pausa.</summary>
+    public DateTime? PausaInicioUtc { get; set; }
+    public int PausasMs { get; set; }
+    /// <summary>Huecos sin latido mayores al umbral, contados como pausa.</summary>
+    public int Interrupciones { get; set; }
+    /// <summary>null mientras el caso sigue abierto.</summary>
+    public DateTime? TFinalUtc { get; set; }
+    public int? IdRegistro { get; set; }
+
+    public Expediente? Expediente { get; set; }
+}

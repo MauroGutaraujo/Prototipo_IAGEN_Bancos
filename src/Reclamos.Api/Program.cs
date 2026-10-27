@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Reclamos.Api;
 using Reclamos.Application.Agentes;
+using Reclamos.Application.Ficha;
 using Reclamos.Application.Llm;
 using Reclamos.Application.Orquestacion;
 using Reclamos.Application.Rag;
@@ -48,9 +49,20 @@ builder.Services.Configure<LlmOptions>(builder.Configuration.GetSection(LlmOptio
 builder.Services.Configure<BancoOptions>(builder.Configuration.GetSection(BancoOptions.Seccion));
 builder.Services.AddOrquestacion();
 
+// Ficha de cronometraje T0 (SPEC §5). Los PIN llegan solo por variables de entorno: Ficha__Pines__A1…
+builder.Services.Configure<FichaOptions>(builder.Configuration.GetSection(FichaOptions.Seccion));
+builder.Services.AddFicha();
+builder.Services.AddFichaAuth();
+
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
+
+app.UseDefaultFiles();
+app.UseStaticFiles();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapFicha();
 
 app.MapHealthChecks("/health", new HealthCheckOptions
 {

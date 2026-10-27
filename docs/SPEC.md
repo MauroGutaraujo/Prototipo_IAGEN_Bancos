@@ -139,11 +139,17 @@ Ver `db/schema.sql` (referencia; la fuente de verdad serán las migraciones de E
 
 ## 5. Línea base manual (T0) — ficha web
 
-- Página en `Reclamos.Api` (Razor Pages o HTML estático + endpoints).
-- Login simple por código de analista (A1, A2, A3). Muestra narración + imagen; buscador de transacción por código en el core; enlace a PDFs normativos.
-- Registra `t_ingreso` al abrir y `t_final` al enviar; botón Pausa/Reanudar (descuenta pausas).
+- **Tecnología:** página HTML estática (`src/Reclamos.Api/wwwroot/ficha/`) que llama a endpoints Minimal API `/ficha/api/...`.
+- **Acceso:** código de analista (A1, A2, A3) + **PIN** por analista, configurado solo por variables de entorno/secrets (`Ficha__Pines__A1`…). Sin PIN configurado, ese analista no puede ingresar. Sesión por cookie.
+- **Asignación (offline, `tools/dataset-generator/asignar_t0.py`, semilla fija):** 20 casos de calibración (8 C1, 8 C2, 4 C3) comunes a los tres analistas + 180 casos repartidos en 60 por analista (24 C1, 24 C2, 12 C3). Cada analista recibe sus 80 casos (60 + 20 de calibración) en un **orden aleatorio propio, con la calibración mezclada**. El script puede leer la verdad de referencia para estratificar; la salida (`analista, orden, id_expediente, es_calibracion`, sin la clase) se versiona y se carga en `app.AsignacionManual`. La aplicación nunca lee `eval`.
+- **Orden:** el analista solo puede abrir el siguiente caso pendiente de su lista (o retomar el que dejó abierto). La ficha no indica cuáles son de calibración.
+- **Qué ve el analista:** narración, imagen del voucher, buscador de transacciones del core por código (con los demás cargos del mismo cliente, como los consulta el Agente Legal) y enlaces a la normativa oficial (SBS, Indecopi, Congreso) y a la política simulada. **Nunca** la salida del sistema ni la verdad de referencia.
+- **Tiempos (servidor, UTC, `app.SesionManual`):**
+  - `t_ingreso` al abrir el caso; `t_final` al enviarlo.
+  - Pausa/Reanudar: el intervalo entre ambos eventos se suma a `PausasMs`.
+  - Latido del navegador cada `Ficha:LatidoSegundos` (15 s) mientras el caso está abierto y no pausado. Si pasa más de `Ficha:UmbralInactividadSegundos` (60 s) sin latido (pestaña cerrada, equipo suspendido), al volver ese hueco se suma a `PausasMs` y se cuenta una interrupción.
+  - Tiempo manual = `TFinal − TIngreso − PausasMs`. Al enviar se escribe `app.RegistroManual`.
 - El analista registra intención, monto, fecha, código, ruta y texto de respuesta.
-- Asignación: 180 casos (60 por analista, 24 C1 + 24 C2 + 12 C3 cada uno) + 20 casos de calibración (8/8/4) que ven los tres. Orden aleatorio por analista.
 
 ## 6. API mínima
 
@@ -152,7 +158,7 @@ Ver `db/schema.sql` (referencia; la fuente de verdad serán las migraciones de E
 | POST | `/api/expedientes/{id}/procesar?modelo=...&condicion=T1` | Procesa un expediente |
 | GET | `/api/expedientes/{id}` | Estado, decisión y resolución |
 | GET | `/api/ejecuciones?modelo=&repeticion=` | Registros |
-| GET/POST | `/ficha/...` | Ficha de cronometraje (T0) |
+| GET/POST | `/ficha/...` | Ficha de cronometraje (T0): página en `/ficha/`, endpoints en `/ficha/api/...` |
 | GET | `/health` | Salud (SQL, Pinecone, Tesseract) |
 
 ## 7. Métricas (se calculan en `tools/analysis`, nunca en la API)

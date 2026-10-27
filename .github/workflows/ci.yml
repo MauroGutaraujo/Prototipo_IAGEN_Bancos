@@ -151,6 +151,9 @@ jobs:
       Ocr__TessdataDir: ${{ github.workspace }}/.tessdata
       Banco__DirectorioDatos: ${{ github.workspace }}/tools/dataset-generator/data
       MODELO_DEV: gemini-3.5-flash-lite
+      # PIN del analista de prueba de la ficha: distinto en cada corrida, nunca en el repo.
+      Ficha__Pines__A1: ficha-${{ github.run_id }}-${{ github.run_attempt }}
+      FICHA_PIN: ficha-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v7
 
@@ -210,6 +213,9 @@ jobs:
           done
           if [ "$codigo" = "000" ]; then echo "::error title=API::La API no respondió en /health"; exit 1; fi
           python3 .github/scripts/csv_anotacion.py health.json "Health de la API (HTTP $codigo)"
+
+      - name: Ficha T0 (analista de prueba, 3 casos; no requiere el LLM)
+        run: python3 .github/scripts/ficha_e2e.py tools/dataset-generator
 
       - name: Un caso por tipología (reporta sin umbrales)
         if: steps.secretos.outputs.ok == 'true'
